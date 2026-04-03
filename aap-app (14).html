@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>AAP · Vistoria</title>
+<script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+<script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0f10;--bg2:#161819;--bg3:#1e2022;--bd:#2a2d30;--bd2:#353a3d;
+  --p:#00c896;--txt:#dde1e4;--txt2:#7a8186;--txt3:#3d4347;
+  --red:#ff4d4d;--amber:#f5a623;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;}
+.screen{display:none;min-height:100vh;}.screen.on{display:block;}
+
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bd);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem;position:sticky;top:0;z-index:50;}
+.hdr-back{background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;}
+.hdr-info{flex:1;min-width:0;}
+.hdr-title{font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-sub{font-size:.65rem;color:var(--txt2);font-family:monospace;}
+.hdr-btn{background:var(--p);color:#000;border:none;font-size:.75rem;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;}
+.hdr-btn.ghost{background:transparent;border:1px solid var(--bd2);color:var(--txt2);}
+
+/* HOME */
+.home-top{padding:1.25rem 1rem .75rem;}
+.home-logo{display:flex;align-items:center;gap:.625rem;margin-bottom:1rem;}
+.logo-mark{width:34px;height:34px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;font-family:monospace;}
+.logo-txt h1{font-size:.95rem;font-weight:700;}
+.logo-txt p{font-size:.65rem;color:var(--txt2);}
+.btn-nova{width:100%;background:var(--p);color:#000;border:none;font-weight:700;font-size:.9rem;padding:13px;border-radius:10px;cursor:pointer;}
+.os-list{padding:0 1rem 5rem;}
+.os-list-hdr{font-size:.65rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;margin:1rem 0 .5rem;}
+.os-card{background:var(--bg2);border:1px solid var(--bd);border-radius:11px;padding:.875rem;margin-bottom:.5rem;cursor:pointer;display:flex;align-items:center;gap:.75rem;}
+.os-ico{width:38px;height:38px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;font-family:monospace;color:var(--p);flex-shrink:0;}
+.os-inf{flex:1;min-width:0;}
+.os-code{font-family:monospace;font-size:.7rem;color:var(--p);}
+.os-name{font-size:.85rem;font-weight:600;margin-top:1px;}
+.os-meta{font-size:.65rem;color:var(--txt2);margin-top:2px;}
+.badge{display:inline-flex;padding:2px 7px;border-radius:999px;font-size:.6rem;font-weight:700;}
+.b-pend{background:rgba(245,166,35,.15);color:var(--amber);}
+.b-ok{background:rgba(0,200,150,.12);color:var(--p);}
+.empty{text-align:center;padding:3rem 1rem;color:var(--txt3);font-size:.8rem;}
+
+/* MODAL */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;}
+.modal-wrap.hidden{display:none;}
+.modal{background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;}
+.modal-title{font-size:.95rem;font-weight:700;margin-bottom:1rem;}
+.fg{display:flex;flex-direction:column;gap:.625rem;}
+label.fl{font-size:.68rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;display:block;}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:.88rem;font-family:inherit;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--p);}
+input::placeholder,textarea::placeholder{color:var(--txt3);}
+select option{background:var(--bg2);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.modal-btns{display:flex;gap:.5rem;margin-top:1rem;}
+.btn{flex:1;padding:11px;border-radius:9px;font-weight:700;font-size:.85rem;cursor:pointer;border:none;font-family:inherit;}
+.btn-p{background:var(--p);color:#000;}
+.btn-ghost{background:transparent;border:1px solid var(--bd2);color:var(--txt2);}
+
+/* PROGRESSO */
+.prog-wrap{background:var(--bg2);border-bottom:1px solid var(--bd);padding:.5rem 1rem;}
+.prog-bar{height:3px;background:var(--bd2);border-radius:2px;margin-bottom:.4rem;}
+.prog-fill{height:100%;background:var(--p);border-radius:2px;transition:.4s;}
+.steps{display:flex;gap:.25rem;overflow-x:auto;padding-bottom:2px;}
+.step-pill{flex-shrink:0;font-size:.58rem;font-weight:700;padding:3px 8px;border-radius:999px;cursor:pointer;border:1px solid var(--bd2);color:var(--txt3);background:transparent;font-family:monospace;}
+.step-pill.active{border-color:var(--p);color:#000;background:var(--p);}
+
+/* SEÇÕES */
+.sec{display:none;padding:.875rem;padding-bottom:6rem;}.sec.on{display:block;}
+.sec-num{font-family:monospace;font-size:.62rem;color:var(--p);letter-spacing:.1em;}
+.sec-title{font-size:.95rem;font-weight:700;margin-top:2px;margin-bottom:.875rem;}
+
+/* QCARD */
+.qcard{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:.8rem;margin-bottom:.5rem;}
+.qlabel{font-size:.72rem;font-weight:600;color:var(--txt2);margin-bottom:.45rem;display:block;}
+.opts{display:flex;flex-direction:column;gap:.3rem;}
+.opts2{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;}
+.opt{display:flex;align-items:center;gap:.45rem;padding:.45rem .6rem;border-radius:7px;border:1px solid var(--bd);cursor:pointer;transition:.1s;min-width:0;}
+.opt.sel{border-color:rgba(0,200,150,.4);background:rgba(0,200,150,.06);}
+.opt input[type=radio],.opt input[type=checkbox]{flex-shrink:0;width:16px;height:16px;accent-color:var(--p);margin:0;}
+.opt-txt{font-size:.8rem;line-height:1.3;word-break:break-word;min-width:0;}
+.obs-lbl{font-size:.62rem;color:var(--txt3);display:block;margin-bottom:2px;margin-top:.4rem;}
+textarea{resize:vertical;min-height:60px;}
+.inline-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.4rem;}
+.inline-grid .sub-lbl{font-size:.62rem;color:var(--txt3);display:block;margin-bottom:2px;}
+
+/* FOTOS */
+.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.5rem;}
+.foto-obrig-grid{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.5rem;}
+.foto-obrig-card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
+.foto-obrig-card.ok{border-color:rgba(0,200,150,.4);}
+.foto-obrig-hdr{display:flex;align-items:center;gap:.5rem;padding:.55rem .7rem;}
+.foto-obrig-cat{flex:1;font-size:.75rem;font-weight:700;color:var(--txt2);}
+.foto-obrig-card.ok .foto-obrig-cat{color:var(--p);}
+.foto-obrig-status{font-size:.6rem;padding:2px 7px;border-radius:999px;font-weight:700;}
+.status-pend{background:rgba(245,166,35,.15);color:var(--amber);}
+.status-ok{background:rgba(0,200,150,.12);color:var(--p);}
+.foto-obrig-body{padding:.4rem .7rem .6rem;}
+.foto-obrig-desc{margin-bottom:.4rem;}
+.foto-obrig-desc input{font-size:.78rem;padding:7px 9px;}
+.foto-obrig-preview{width:100%;max-height:200px;object-fit:contain;object-position:center;border-radius:7px;display:block;margin-bottom:.35rem;background:var(--bg);}
+.foto-obrig-actions{display:flex;gap:.4rem;}
+.btn-cam{flex:1;background:var(--p);color:#000;border:none;font-weight:700;font-size:.78rem;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-cam-re{background:var(--bg3);border:1px solid var(--bd2);color:var(--txt2);}
+.btn-cam-del{background:rgba(255,77,77,.15);color:var(--red);border:none;width:34px;border-radius:8px;cursor:pointer;font-size:14px;}
+.foto-card{background:var(--bg3);border:1px solid rgba(0,200,150,.3);border-radius:9px;overflow:hidden;position:relative;}
+.foto-preview{width:100%;max-height:160px;object-fit:contain;object-position:center;display:block;background:var(--bg);}
+.foto-num{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.75);color:var(--p);font-family:monospace;font-size:.58rem;padding:2px 5px;border-radius:4px;}
+.foto-del{position:absolute;top:5px;right:5px;background:rgba(255,77,77,.85);border:none;color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;cursor:pointer;}
+.foto-leg{padding:.35rem .45rem;border-top:1px solid var(--bd);}
+.foto-leg input{border:none;background:transparent;padding:0;font-size:.68rem;color:var(--txt);width:100%;}
+.btn-add-foto{background:var(--bg2);border:1px dashed var(--bd2);border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;padding:.7rem;font-size:.78rem;color:var(--txt2);cursor:pointer;width:100%;}
+
+/* NAV */
+.nav-btns{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bd);padding:.65rem 1rem;display:flex;gap:.5rem;}
+.export-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bd);padding:.65rem 1rem;display:flex;gap:.5rem;}
+.btn-exp{flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;border:none;}
+.btn-word{background:#1e6bb8;color:#fff;}
+.btn-pdf{background:#c0392b;color:#fff;}
+
+/* GPS BADGE */
+.gps-badge{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-family:monospace;padding:2px 7px;border-radius:999px;font-weight:700;flex-shrink:0;}
+.gps-on{background:rgba(0,200,150,.12);color:var(--p);}
+.gps-off{background:rgba(255,77,77,.12);color:var(--red);}
+.gps-wait{background:rgba(245,166,35,.12);color:var(--amber);}
+
+/* ROTINA PILLS */
+.rotina-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.75rem;}
+.rotina-opt{border:1px solid var(--bd2);border-radius:9px;padding:.6rem .7rem;cursor:pointer;transition:.15s;user-select:none;}
+.rotina-opt.sel{border-color:var(--p);background:rgba(0,200,150,.07);}
+.rotina-opt-titulo{font-size:.75rem;font-weight:700;color:var(--txt);margin-bottom:2px;}
+.rotina-opt-desc{font-size:.6rem;color:var(--txt2);line-height:1.3;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="toast" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);padding:8px 18px;border-radius:20px;font-size:.8rem;opacity:0;transition:.2s;pointer-events:none;z-index:300;white-space:nowrap;"></div>
+<div id="screen-license" style="display:none;"></div>
+
+<!-- HOME -->
+<div class="screen on" id="screen-home" style="position:relative;">
+  <div class="home-top">
+    <div class="home-logo">
+      <div class="logo-mark">AAP</div>
+      <div class="logo-txt"><h1>Vistoria de Campo</h1><p>ABNT NBR 15515-1:2024 · Offline</p></div>
+      <span id="gps-badge-home" class="gps-badge gps-wait">⊙ GPS…</span>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:0">
+      <button class="btn-nova" style="flex:1" onclick="abrirModal()">+ Nova OS</button>
+      <button onclick="abrirConfig()" style="background:var(--bg2);border:1px solid var(--bd2);color:var(--txt2);font-size:1.1rem;padding:0 14px;border-radius:10px;cursor:pointer;" title="Configurações">⚙</button>
+    </div>
+  </div>
+  <div class="os-list">
+    <div class="os-list-hdr">Ordens de Serviço</div>
+    <div id="lista-os"></div>
+  </div>
+
+<div id="modal-config" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div class="modal-title">⚙ Configurações</div>
+
+    <div style="font-size:.72rem;font-weight:700;color:var(--txt2);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.06em">Fotos sugeridas por tipo de ativo</div>
+    <div style="font-size:.65rem;color:var(--txt3);margin-bottom:.75rem">O app alertará se legendas das fotos não cobrirem essas categorias.</div>
+    <div id="config-tipos"></div>
+
+    <div style="border-top:1px solid var(--bd);padding-top:.875rem;margin:.875rem 0">
+      <div style="font-size:.72rem;font-weight:700;color:var(--txt2);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em">Exportar / Importar</div>
+      <div style="display:flex;gap:.5rem">
+        <button onclick="exportarConfig()" style="flex:1;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);font-size:.78rem;padding:9px;border-radius:8px;cursor:pointer">⬇ Exportar .json</button>
+        <label style="flex:1;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);font-size:.78rem;padding:9px;border-radius:8px;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center">
+          ⬆ Importar .json
+          <input type="file" accept=".json" id="import-config-inp" style="display:none" onchange="importarConfig(this)">
+        </label>
+      </div>
+      <div style="font-size:.62rem;color:var(--txt3);margin-top:.4rem">Compartilhe o .json por WhatsApp, e-mail etc. para sincronizar entre dispositivos.</div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="fecharConfig()">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarConfig()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+  <!-- PAINEL NOVA OS -->
+  <div id="modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;">
+    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:92vh;overflow-y:auto;">
+      <div class="modal-title">Nova Ordem de Serviço</div>
+      <div class="fg">
+        <div>
+          <label class="fl">Rotina</label>
+          <div class="rotina-grid" id="rotina-grid">
+            <div class="rotina-opt sel" data-rotina="completa" onclick="selecionarRotina(this)">
+              <div class="rotina-opt-titulo">🗂 Completa</div>
+              <div class="rotina-opt-desc">Anexo 1 + 2 + Fotos</div>
+            </div>
+            <div class="rotina-opt" data-rotina="anexo1" onclick="selecionarRotina(this)">
+              <div class="rotina-opt-titulo">📋 Só Anexo 1</div>
+              <div class="rotina-opt-desc">Coleta e gera Anexo 1</div>
+            </div>
+            <div class="rotina-opt" data-rotina="anexo2" onclick="selecionarRotina(this)">
+              <div class="rotina-opt-titulo">📝 Só Anexo 2</div>
+              <div class="rotina-opt-desc">Coleta e gera Anexo 2</div>
+            </div>
+            <div class="rotina-opt" data-rotina="fotos" onclick="selecionarRotina(this)">
+              <div class="rotina-opt-titulo">📷 Só Fotos</div>
+              <div class="rotina-opt-desc">Fotos + coord → galeria</div>
+            </div>
+          </div>
+        </div>
+          <label class="fl">Código OS *</label>
+          <input id="m-cod" placeholder="Ex: PL-APA-PCO1368" oninput="prevNome()">
+          <div id="m-prev" style="font-size:.65rem;color:var(--p);font-family:monospace;margin-top:3px;min-height:14px;"></div>
+        </div>
+        <div class="row2">
+          <div><label class="fl">Nome do Ativo</label><input id="m-ativo" placeholder="Ex: Amazonas 01"></div>
+          <div><label class="fl">Tipo</label>
+            <select id="m-tipo"><option value="PCO">PCO – Poço</option><option value="ETA">ETA</option><option value="ETE">ETE</option><option value="EEE">EEE</option><option value="OUTRO">Outro</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div><label class="fl">Município</label><input id="m-mun" placeholder="Parauapebas"></div>
+          <div><label class="fl">UF</label>
+            <select id="m-uf"><option>PA</option><option>AM</option><option>AC</option><option>AP</option><option>RO</option><option>RR</option><option>TO</option><option>MA</option><option>PI</option><option>CE</option><option>RN</option><option>PB</option><option>PE</option><option>AL</option><option>SE</option><option>BA</option><option>MG</option><option>ES</option><option>RJ</option><option>SP</option><option>PR</option><option>SC</option><option>RS</option><option>MS</option><option>MT</option><option>GO</option><option>DF</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div><label class="fl">Data</label><input type="date" id="m-data"></div>
+          <div><label class="fl">Técnico</label><input id="m-tec" placeholder="Nome(s)"></div>
+        </div>
+        <div><label class="fl">Entrevistado</label><input id="m-ent" placeholder="Nome"></div>
+        <div class="row2">
+          <div><label class="fl">Função</label><input id="m-funcao" placeholder="Ex: Operador"></div>
+          <div><label class="fl">Matrícula</label><input id="m-matricula" placeholder="Ex: 00123"></div>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-p" onclick="criarOS()">Criar OS</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMULÁRIO -->
+<div class="screen" id="screen-form">
+  <div class="hdr">
+    <button class="hdr-back" onclick="voltarHome()">←</button>
+    <div class="hdr-info">
+      <div class="hdr-title" id="f-titulo">—</div>
+      <div class="hdr-sub" id="f-sub">—</div>
+    </div>
+    <span id="gps-badge-form" class="gps-badge gps-wait">⊙ GPS…</span>
+    <button class="hdr-btn ghost" onclick="salvar()">Salvar</button>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="steps" id="steps"></div>
+  </div>
+
+  <!-- SEC 0: Identificação -->
+  <div class="sec on" id="sec-0">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 01</div>
+    <div class="sec-title">Identificação do Poço e Integridade</div>
+
+    <div class="qcard"><span class="qlabel">1.1 Idade de perfuração/instalação</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q11" value="1-10"><span class="opt-txt">1–10 anos</span></label>
+        <label class="opt"><input type="radio" name="q11" value="10-20"><span class="opt-txt">10–20 anos</span></label>
+        <label class="opt"><input type="radio" name="q11" value=">20"><span class="opt-txt">> 20 anos</span></label>
+        <label class="opt"><input type="radio" name="q11" value="desc"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.2 Tipo do poço</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q12" value="Tubular profundo"><span class="opt-txt">Tubular profundo</span></label>
+        <label class="opt"><input type="radio" name="q12" value="Tubular raso"><span class="opt-txt">Tubular raso</span></label>
+        <label class="opt"><input type="radio" name="q12" value="Artesiano jorrante"><span class="opt-txt">Artesiano jorrante</span></label>
+        <label class="opt"><input type="radio" name="q12" value="Monitoramento"><span class="opt-txt">Poço de monitoramento</span></label>
+        <label class="opt"><input type="radio" name="q12" value="Drenante"><span class="opt-txt">Drenante</span></label>
+        <label class="opt"><input type="radio" name="q12" value="Outro"><span class="opt-txt">Outro</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.3 Possui outorga?</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q13" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q13" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q13" value="Em tramitação"><span class="opt-txt">Em tramitação</span></label>
+        <label class="opt"><input type="radio" name="q13" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.4–1.7 Dados técnicos</span>
+      <div class="inline-grid">
+        <div><span class="sub-lbl">Aquífero</span><input id="q14" placeholder="—"></div>
+        <div><span class="sub-lbl">Prof. total (m)</span><input id="q15" placeholder="Desconhecido"></div>
+        <div><span class="sub-lbl">Prof. útil (m)</span><input id="q16" placeholder="Desconhecido"></div>
+        <div><span class="sub-lbl">Diâmetro (pol)</span><input id="q17" placeholder="Desconhecido"></div>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.8 Cabeçote / proteção superficial (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q18" value="Pedestal em concreto"><span class="opt-txt">Pedestal em concreto</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Tampa com cadeado"><span class="opt-txt">Tampa com cadeado</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Respiro com tela/curva U"><span class="opt-txt">Respiro com tela/curva "U"</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Passa-cabos vedado"><span class="opt-txt">Passa-cabos vedado</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Acima da cota de inundação"><span class="opt-txt">Poço acima da cota de inundação local</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Abrigo/casa de bombas"><span class="opt-txt">Abrigo/casa de bombas</span></label>
+        <label class="opt"><input type="checkbox" name="q18" value="Cerca/perímetro de proteção"><span class="opt-txt">Cerca/perímetro de proteção</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.9 Selo sanitário (cimento/bentonita)</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q19" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q19" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q19" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.10 Anel anular / pré-filtro</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q110" value="Areia"><span class="opt-txt">Areia</span></label>
+        <label class="opt"><input type="radio" name="q110" value="Brita"><span class="opt-txt">Brita</span></label>
+        <label class="opt"><input type="radio" name="q110" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+      <span class="obs-lbl">Observações</span><textarea id="obs110" placeholder="…"></textarea>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.11 Revestimentos e filtros</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q111" value="Aço carbono"><span class="opt-txt">Aço carbono</span></label>
+        <label class="opt"><input type="radio" name="q111" value="Aço inox"><span class="opt-txt">Aço inox</span></label>
+        <label class="opt"><input type="radio" name="q111" value="PVC geomecânico"><span class="opt-txt">PVC geomecânico</span></label>
+        <label class="opt"><input type="radio" name="q111" value="PEAD"><span class="opt-txt">PEAD</span></label>
+        <label class="opt"><input type="radio" name="q111" value="Outro"><span class="opt-txt">Outro</span></label>
+        <label class="opt"><input type="radio" name="q111" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.12 Integridade aparente</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q112" value="Adequada"><span class="opt-txt">Adequada</span></label>
+        <label class="opt"><input type="radio" name="q112" value="Corrosão"><span class="opt-txt">Corrosão</span></label>
+        <label class="opt"><input type="radio" name="q112" value="Deformação"><span class="opt-txt">Deformação</span></label>
+        <label class="opt"><input type="radio" name="q112" value="Trincas/Fissuras"><span class="opt-txt">Trincas/Fissuras</span></label>
+        <label class="opt"><input type="radio" name="q112" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.13 Conservação / limpeza geral</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q113" value="Adequada"><span class="opt-txt">Adequada</span></label>
+        <label class="opt"><input type="radio" name="q113" value="Inadequada"><span class="opt-txt">Inadequada</span></label>
+      </div>
+      <span class="obs-lbl">Observações</span><textarea id="obs113" placeholder="…"></textarea>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.14 Drenagem do piso/entorno</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q114" value="Impermeável com drenagem"><span class="opt-txt">Piso impermeável com queda para drenagem</span></label>
+        <label class="opt"><input type="radio" name="q114" value="Solo exposto"><span class="opt-txt">Piso em solo exposto</span></label>
+        <label class="opt"><input type="radio" name="q114" value="Canaletas/bacia"><span class="opt-txt">Canaletas/bacia de contenção</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">1.15 Erosão/encharcamento próximo</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q115" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q115" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q115" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEC 1: Operação -->
+  <div class="sec" id="sec-1">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 02</div>
+    <div class="sec-title">Operação, Equipamentos e Segurança</div>
+
+    <div class="qcard"><span class="qlabel">2.1 Tipo de bombeamento</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q21" value="Submersa"><span class="opt-txt">Submersa</span></label>
+        <label class="opt"><input type="radio" name="q21" value="Centrífuga de superfície"><span class="opt-txt">Centrífuga de superfície</span></label>
+        <label class="opt"><input type="radio" name="q21" value="Ejetora"><span class="opt-txt">Ejetora</span></label>
+        <label class="opt"><input type="radio" name="q21" value="Manual"><span class="opt-txt">Manual</span></label>
+        <label class="opt"><input type="radio" name="q21" value="Outro"><span class="opt-txt">Outro</span></label>
+      </div>
+      <span class="obs-lbl">Potência (CV)</span><input id="q21cv" placeholder="Ex: 5 CV ou Desconhecido">
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.2 Vibração/ruído anormal</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q22" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q22" value="Não"><span class="opt-txt">Não</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.3 Instrumentação (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q23" value="Hidrômetro"><span class="opt-txt">Hidrômetro</span></label>
+        <label class="opt"><input type="checkbox" name="q23" value="Manômetro"><span class="opt-txt">Manômetro</span></label>
+        <label class="opt"><input type="checkbox" name="q23" value="Medidor de nível (piezômetro/datalogger)"><span class="opt-txt">Medidor de nível (piezômetro/datalogger)</span></label>
+        <label class="opt"><input type="checkbox" name="q23" value="Válvula de retenção"><span class="opt-txt">Válvula de retenção</span></label>
+      </div>
+      <span class="obs-lbl">Quadro elétrico — sinalização</span>
+      <div class="opts2" style="margin-top:.25rem">
+        <label class="opt"><input type="checkbox" name="q23e" value="Sonoro"><span class="opt-txt">Sonoro</span></label>
+        <label class="opt"><input type="checkbox" name="q23e" value="Visual"><span class="opt-txt">Visual</span></label>
+        <label class="opt"><input type="checkbox" name="q23e" value="Aterramento/DR"><span class="opt-txt">Aterramento/DR</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.4 Condições do painel elétrico</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q24" value="Adequadas"><span class="opt-txt">Adequadas</span></label>
+        <label class="opt"><input type="radio" name="q24" value="Inadequadas"><span class="opt-txt">Inadequadas</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.5 Produtos/insumos (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q25" value="Cloração/hipoclorito"><span class="opt-txt">Cloração/hipoclorito</span></label>
+        <label class="opt"><input type="checkbox" name="q25" value="Limpeza química"><span class="opt-txt">Limpeza química</span></label>
+        <label class="opt"><input type="checkbox" name="q25" value="Lubrificantes/óleos"><span class="opt-txt">Lubrificantes/óleos</span></label>
+        <label class="opt"><input type="checkbox" name="q25" value="Não se aplica"><span class="opt-txt">Não se aplica</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.6 Armazenamento</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q26" value="Área coberta com contenção"><span class="opt-txt">Área coberta com contenção</span></label>
+        <label class="opt"><input type="radio" name="q26" value="Área aberta sem contenção"><span class="opt-txt">Área aberta sem contenção</span></label>
+        <label class="opt"><input type="radio" name="q26" value="N/A"><span class="opt-txt">N/A</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.7 Eventos operacionais (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q27" value="Extravasos/transbordos"><span class="opt-txt">Extravasos/transbordos em caixa de proteção</span></label>
+        <label class="opt"><input type="checkbox" name="q27" value="Alagamento recorrente"><span class="opt-txt">Alagamento recorrente</span></label>
+        <label class="opt"><input type="checkbox" name="q27" value="Nenhum observado"><span class="opt-txt">Nenhum observado</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">2.8 Manutenções preventivas</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q28" value="Mensal"><span class="opt-txt">Mensal</span></label>
+        <label class="opt"><input type="radio" name="q28" value="Trimestral"><span class="opt-txt">Trimestral</span></label>
+        <label class="opt"><input type="radio" name="q28" value="Semestral"><span class="opt-txt">Semestral</span></label>
+        <label class="opt"><input type="radio" name="q28" value="Anual"><span class="opt-txt">Anual</span></label>
+        <label class="opt"><input type="radio" name="q28" value="Não realizada"><span class="opt-txt">Não realizada</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEC 2: Qualidade -->
+  <div class="sec" id="sec-2">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 03</div>
+    <div class="sec-title">Qualidade e Monitoramento da Água</div>
+
+    <div class="qcard"><span class="qlabel">3.1 Nível d'água (NA)</span>
+      <div class="inline-grid">
+        <div><span class="sub-lbl">Estático (m)</span><input id="q31e" placeholder="Desconhecido"></div>
+        <div><span class="sub-lbl">Dinâmico (m)</span><input id="q31d" placeholder="Desconhecido"></div>
+        <div><span class="sub-lbl">Data medição</span><input id="q31dt" placeholder="dd/mm/aaaa"></div>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">3.2–3.3 Dados operacionais</span>
+      <div class="inline-grid">
+        <div><span class="sub-lbl">Vazão típica (m³/h)</span><input id="q32" placeholder="Desconhecido"></div>
+        <div><span class="sub-lbl">Operação diária (h)</span><input id="q33" placeholder="Desconhecido"></div>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">3.4 Monitoramento de qualidade</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q34" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q34" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q34" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">3.5 Parâmetros monitorados (múltipla)</span>
+      <div class="opts2">
+        <label class="opt"><input type="checkbox" name="q35" value="Turbidez"><span class="opt-txt">Turbidez</span></label>
+        <label class="opt"><input type="checkbox" name="q35" value="pH"><span class="opt-txt">pH</span></label>
+        <label class="opt"><input type="checkbox" name="q35" value="Cloro"><span class="opt-txt">Cloro</span></label>
+        <label class="opt"><input type="checkbox" name="q35" value="Ferro/Mn"><span class="opt-txt">Ferro/Mn</span></label>
+        <label class="opt"><input type="checkbox" name="q35" value="Coliformes"><span class="opt-txt">Coliformes</span></label>
+        <label class="opt"><input type="checkbox" name="q35" value="STD"><span class="opt-txt">STD</span></label>
+      </div>
+      <span class="obs-lbl">Outros</span><input id="q35out" placeholder="…">
+    </div>
+
+    <div class="qcard"><span class="qlabel">Histórico de não conformidade</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q36" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q36" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q36" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+      <span class="obs-lbl">Descrição (se Sim)</span><textarea id="obs36" placeholder="…"></textarea>
+    </div>
+  </div>
+
+  <!-- SEC 3: Entorno -->
+  <div class="sec" id="sec-3">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 04</div>
+    <div class="sec-title">Caracterização do Entorno</div>
+
+    <div class="qcard"><span class="qlabel">4.1 Distância à edificação mais próxima</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q41" value="< 10 m"><span class="opt-txt">< 10 m</span></label>
+        <label class="opt"><input type="radio" name="q41" value="10–50 m"><span class="opt-txt">10–50 m</span></label>
+        <label class="opt"><input type="radio" name="q41" value="50–100 m"><span class="opt-txt">50–100 m</span></label>
+        <label class="opt"><input type="radio" name="q41" value="> 100 m"><span class="opt-txt">> 100 m</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.2 Empreendimentos no entorno (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q42" value="Área de vegetação natural"><span class="opt-txt">Área de vegetação natural</span></label>
+        <label class="opt"><input type="checkbox" name="q42" value="Zona residencial"><span class="opt-txt">Zona residencial</span></label>
+        <label class="opt"><input type="checkbox" name="q42" value="Estabelecimento comercial"><span class="opt-txt">Estabelecimento comercial</span></label>
+        <label class="opt"><input type="checkbox" name="q42" value="Complexo industrial"><span class="opt-txt">Complexo industrial</span></label>
+        <label class="opt"><input type="checkbox" name="q42" value="Instituição educacional"><span class="opt-txt">Instituição educacional</span></label>
+        <label class="opt"><input type="checkbox" name="q42" value="Outros"><span class="opt-txt">Outros</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.3 Corpos hídricos próximos utilizados</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q43" value="Abastecimento domiciliar"><span class="opt-txt">Sim – abastecimento domiciliar</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Recreação"><span class="opt-txt">Sim – recreação</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Dessedentação animal"><span class="opt-txt">Sim – dessedentação animal</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Irrigação"><span class="opt-txt">Sim – irrigação</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Utilização desconhecida"><span class="opt-txt">Sim – utilização desconhecida</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Não há presença"><span class="opt-txt">Não há presença</span></label>
+        <label class="opt"><input type="checkbox" name="q43" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.4 Poços próximos utilizados</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q44" value="Abastecimento domiciliar"><span class="opt-txt">Sim – abastecimento domiciliar</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Recreação"><span class="opt-txt">Sim – recreação</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Dessedentação animal"><span class="opt-txt">Sim – dessedentação animal</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Irrigação"><span class="opt-txt">Sim – irrigação</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Utilização desconhecida"><span class="opt-txt">Sim – utilização desconhecida</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Não há presença"><span class="opt-txt">Não há presença</span></label>
+        <label class="opt"><input type="checkbox" name="q44" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.5 Cacimba próxima</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q45" value="Abastecimento domiciliar"><span class="opt-txt">Sim – abastecimento domiciliar</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Recreação"><span class="opt-txt">Sim – recreação</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Dessedentação animal"><span class="opt-txt">Sim – dessedentação animal</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Irrigação"><span class="opt-txt">Sim – irrigação</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Utilização desconhecida"><span class="opt-txt">Sim – utilização desconhecida</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Não há presença"><span class="opt-txt">Não há presença</span></label>
+        <label class="opt"><input type="checkbox" name="q45" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.6 Chafariz próximo</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q46" value="Abastecimento domiciliar"><span class="opt-txt">Sim – abastecimento domiciliar</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Recreação"><span class="opt-txt">Sim – recreação</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Dessedentação animal"><span class="opt-txt">Sim – dessedentação animal</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Irrigação"><span class="opt-txt">Sim – irrigação</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Utilização desconhecida"><span class="opt-txt">Sim – utilização desconhecida</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Não há presença"><span class="opt-txt">Não há presença</span></label>
+        <label class="opt"><input type="checkbox" name="q46" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.7 Resíduos sólidos no entorno (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q47" value="Doméstico"><span class="opt-txt">Sim – doméstico</span></label>
+        <label class="opt"><input type="checkbox" name="q47" value="Industrial"><span class="opt-txt">Sim – industrial</span></label>
+        <label class="opt"><input type="checkbox" name="q47" value="Construção civil"><span class="opt-txt">Sim – construção civil</span></label>
+        <label class="opt"><input type="checkbox" name="q47" value="Classificação desconhecida"><span class="opt-txt">Sim – classificação desconhecida</span></label>
+        <label class="opt"><input type="checkbox" name="q47" value="Não há"><span class="opt-txt">Não há</span></label>
+      </div>
+      <span class="obs-lbl">Observações</span><textarea id="obs47" placeholder="Ex: Esgoto a céu aberto…"></textarea>
+    </div>
+
+    <div class="qcard"><span class="qlabel">4.8 Modalidade de disposição</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q48" value="Deposição sobre a superfície"><span class="opt-txt">Deposição sobre a superfície da estação</span></label>
+        <label class="opt"><input type="radio" name="q48" value="Enterrado"><span class="opt-txt">Enterrado abaixo da superfície</span></label>
+        <label class="opt"><input type="radio" name="q48" value="Combinação superficial e subterrânea"><span class="opt-txt">Combinação superficial e subterrânea</span></label>
+        <label class="opt"><input type="radio" name="q48" value="N/A"><span class="opt-txt">N/A</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEC 4: Histórico -->
+  <div class="sec" id="sec-4">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 05</div>
+    <div class="sec-title">Histórico de Uso e Ocupação</div>
+
+    <div class="qcard"><span class="qlabel">5.1 Atividades preexistentes (múltipla)</span>
+      <div class="opts2">
+        <label class="opt"><input type="checkbox" name="q51" value="Vegetação natural"><span class="opt-txt">Vegetação natural</span></label>
+        <label class="opt"><input type="checkbox" name="q51" value="Uso residencial"><span class="opt-txt">Uso residencial</span></label>
+        <label class="opt"><input type="checkbox" name="q51" value="Uso comercial"><span class="opt-txt">Uso comercial</span></label>
+        <label class="opt"><input type="checkbox" name="q51" value="Uso industrial"><span class="opt-txt">Uso industrial</span></label>
+        <label class="opt"><input type="checkbox" name="q51" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">5.2 Explosão ou incêndio</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q52" value="Sim – substâncias inflamáveis"><span class="opt-txt">Sim – substâncias inflamáveis</span></label>
+        <label class="opt"><input type="radio" name="q52" value="Sim – curto-circuito/falha elétrica"><span class="opt-txt">Sim – curto-circuito/falha elétrica</span></label>
+        <label class="opt"><input type="radio" name="q52" value="Sim – acúmulo de gases"><span class="opt-txt">Sim – acúmulo de gases inflamáveis</span></label>
+        <label class="opt"><input type="radio" name="q52" value="Sim – vandalismo/incêndio criminoso"><span class="opt-txt">Sim – vandalismo/incêndio criminoso</span></label>
+        <label class="opt"><input type="radio" name="q52" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q52" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">5.3 Estudos ambientais anteriores</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q53" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q53" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q53" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">5.4 Notificações de infração ambiental</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q54" value="Sim"><span class="opt-txt">Sim</span></label>
+        <label class="opt"><input type="radio" name="q54" value="Não"><span class="opt-txt">Não</span></label>
+        <label class="opt"><input type="radio" name="q54" value="Desconhecido"><span class="opt-txt">Desconhecido</span></label>
+      </div>
+      <span class="obs-lbl">Observações gerais</span><textarea id="obs54" placeholder="…"></textarea>
+    </div>
+  </div>
+
+  <!-- SEC 5: Diagnóstico -->
+  <div class="sec" id="sec-5">
+    <div class="sec-num">ANEXO 2 · SEÇÃO 06</div>
+    <div class="sec-title">Diagnóstico Preliminar</div>
+
+    <div class="qcard"><span class="qlabel">6.1 Situação do solo / água subterrânea</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q61" value="Potencial de contaminação"><span class="opt-txt">Potencial de contaminação</span></label>
+        <label class="opt"><input type="radio" name="q61" value="Suspeita de contaminação"><span class="opt-txt">Suspeita de contaminação</span></label>
+        <label class="opt"><input type="radio" name="q61" value="Contaminada"><span class="opt-txt">Contaminada</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">6.2 Fontes potenciais — GERAIS (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q62g" value="Vazamentos/exfiltrações em tubulações"><span class="opt-txt">Vazamentos/exfiltrações em tubulações, bombas e tanques</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Infiltrações em pisos/juntas"><span class="opt-txt">Infiltrações em pisos, juntas, valas ou bacias de contenção</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Manchas no solo/piso/parede"><span class="opt-txt">Manchas no solo/piso/parede (óleos, produtos químicos, lodo)</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Estado de conservação comprometido"><span class="opt-txt">Estado de conservação (corrosão, trincas, fissuras)</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Armazenamento inadequado de resíduos"><span class="opt-txt">Armazenamento inadequado de resíduos/lodos</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Armazenamento inadequado de insumos"><span class="opt-txt">Armazenamento inadequado de insumos/matérias-primas</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Drenagem pluvial em área de processo"><span class="opt-txt">Drenagem pluvial cruzando áreas de processo</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Gerador/transformador sem contenção"><span class="opt-txt">Gerador/transformador com óleo sem contenção</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Oficina/manutenção (óleos, solventes)"><span class="opt-txt">Oficina/manutenção (óleos, solventes, baterias)</span></label>
+        <label class="opt"><input type="checkbox" name="q62g" value="Não há indícios"><span class="opt-txt">Não há indícios de contaminação</span></label>
+      </div>
+      <span class="obs-lbl">Outros / Observações</span><textarea id="obs62g" placeholder="…"></textarea>
+    </div>
+
+    <div class="qcard"><span class="qlabel">6.2 Fontes — ESPECÍFICAS DE POÇO (múltipla)</span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="q62e" value="Cabeçote danificado"><span class="opt-txt">Cabeçote danificado (tampa, vedação, respiro, passa-cabos)</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Ausência/deficiência de selo sanitário"><span class="opt-txt">Ausência/deficiência de selo sanitário</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Revestimento/filtro comprometido"><span class="opt-txt">Revestimento/filtro comprometido (corrosão, colapso)</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Extravaso em caixa de proteção"><span class="opt-txt">Extravaso em caixa de proteção/by-pass para o solo</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Inundação recorrente do poço"><span class="opt-txt">Inundação recorrente do poço/abrigo</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Cruzamento com rede de esgoto"><span class="opt-txt">Cruzamento de rede de esgoto/drenagem junto ao poço</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Cloro sem contenção"><span class="opt-txt">Cloro/hipo sem contenção, piso atacado</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Óleos/graxas no entorno"><span class="opt-txt">Óleos e graxas de bombas/geradores no entorno</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Retrolavagem no solo"><span class="opt-txt">Retrolavagem descarregada no solo/corpo hídrico</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Fauna/vetores no abrigo"><span class="opt-txt">Fauna/vetores e material biológico no abrigo</span></label>
+        <label class="opt"><input type="checkbox" name="q62e" value="Poços adjacentes interconectados"><span class="opt-txt">Poços adjacentes interconectados sem válvulas</span></label>
+      </div>
+    </div>
+
+    <div class="qcard"><span class="qlabel">6.3 Recomenda investigação confirmatória (Fase 2)?</span>
+      <div class="opts2">
+        <label class="opt"><input type="radio" name="q63" value="Sim"><span class="opt-txt" style="color:var(--red);font-weight:600">Sim</span></label>
+        <label class="opt"><input type="radio" name="q63" value="Não"><span class="opt-txt">Não</span></label>
+      </div>
+      <span class="obs-lbl">Descrição/justificativa</span>
+      <textarea id="q63txt" placeholder="Descreva as condições observadas…" style="min-height:90px"></textarea>
+    </div>
+  </div>
+
+  <!-- SEC 6: Fotos -->
+  <div class="sec" id="sec-6">
+    <div class="sec-num">ANEXO 3</div>
+    <div class="sec-title">Registro Fotográfico</div>
+    <div id="foto-obrig-grid"></div>
+    <div style="font-size:.68rem;color:var(--txt3);margin:.6rem 0 .4rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Fotos adicionais</div>
+    <div class="foto-grid" id="foto-grid"></div>
+    <label class="btn-add-foto">
+      ＋ Adicionar foto avulsa
+      <input type="file" accept="image/*" capture="environment" id="foto-inp" multiple style="display:none">
+    </label>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-btns" id="nav-btns">
+    <button class="btn btn-ghost" id="btn-prev" onclick="navSec(-1)">← Anterior</button>
+    <button class="btn btn-p" id="btn-next" onclick="navSec(1)">Próximo →</button>
+  </div>
+  <div class="export-bar" id="export-bar" style="display:none">
+    <button class="btn-exp btn-word" onclick="exportWord()">⬇ Word (.docx)</button>
+    <button class="btn-exp btn-pdf" onclick="exportPDF()">⬇ PDF</button>
+  </div>
+</div>
+
+<script>
+// ── DB ──
+const db = new Dexie('AAPv2');
+db.version(1).stores({ os:'++id,codigo,updatedAt' });
+
+// ── ESTADO ──
+let osAtual=null, secAtual=0, gps=null, gpsCity='', gpsState='';
+const NSEC=7;
+const LBLS=['1·Ident','2·Oper','3·Qualid','4·Entorno','5·Histórico','6·Diagnóst','📷 Fotos'];
+
+// ── GPS ──
+let gpsAtivo=false;
+function atualizarBadges(){
+  const badges=['gps-badge-home','gps-badge-form'];
+  badges.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(!gpsAtivo){
+      el.className='gps-badge gps-off';el.textContent='⊗ GPS off';
+    } else if(!gps){
+      el.className='gps-badge gps-wait';el.textContent='⊙ GPS…';
+    } else {
+      const acc=gps.accuracy;
+      const txt=acc<10?'●●●':acc<30?'●●○':acc<100?'●○○':'○○○';
+      el.className='gps-badge gps-on';
+      el.textContent=`⊙ ${txt} ±${Math.round(acc)}m`;
+    }
+  });
+}
+
+function iniciarGPS(){
+  if(!navigator.geolocation){
+    alert('GPS não disponível neste dispositivo.');return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    ()=>{gpsAtivo=true;atualizarBadges();},
+    e=>{
+      gpsAtivo=false;atualizarBadges();
+      if(e.code===1){
+        const ua=navigator.userAgent;
+        const isFirefox=/Firefox/.test(ua);
+        let instrucao;
+        if(isFirefox){
+          instrucao='No Firefox: toque no ícone 🔒 na barra de endereço → Permissões → Localização → Permitir.\n\nApós liberar, recarregue a página.';
+        } else {
+          // Chrome Android (padrão)
+          instrucao='No Chrome:\n1. Toque no ícone 🔒 (cadeado) na barra de endereço\n2. Toque em "Permissões"\n3. Toque em "Localização"\n4. Selecione "Permitir"\n5. Recarregue a página\n\nOu: Chrome → ⋮ Menu → Configurações → Configurações do site → Local → "Não permitidos" → selecione este site → Permitir.';
+        }
+        alert('⚠️ GPS bloqueado\n\nAs coordenadas não serão registradas nas fotos.\n\n' + instrucao);
+      }
+    },{timeout:8000}
+  );
+  navigator.geolocation.watchPosition(p=>{
+    gps=p.coords;gpsAtivo=true;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${p.coords.latitude}&lon=${p.coords.longitude}&format=json`)
+      .then(r=>r.json()).then(d=>{gpsCity=d.address?.city||d.address?.town||d.address?.municipality||'';gpsState=d.address?.state||'';}).catch(()=>{});
+    atualizarBadges();
+  },e=>{gpsAtivo=false;atualizarBadges();},{enableHighAccuracy:true});
+}
+
+// Solicitar GPS ao carregar
+window.addEventListener('load',()=>setTimeout(iniciarGPS,800));
+
+// ── HOME ──
+async function carregarLista(){
+  const lista=await db.os.orderBy('updatedAt').reverse().toArray();
+  const el=document.getElementById('lista-os');
+  if(!lista.length){el.innerHTML='<div class="empty">📋<br>Nenhuma OS cadastrada</div>';return;}
+  el.innerHTML=lista.map(o=>`
+    <div class="os-card" onclick="abrirOS(${o.id})">
+      <div class="os-ico">${o.tipo||'OS'}</div>
+      <div class="os-inf">
+        <div class="os-code">${o.codigo}</div>
+        <div class="os-name">${o.ativo||'—'}</div>
+        <div class="os-meta">${o.municipio||''}/${o.uf||''} · ${o.data||'—'}</div>
+      </div>
+      <span class="badge ${o.finalizado?'b-ok':'b-pend'}">${o.finalizado?'OK':'Pend'}</span>
+      <span style="color:var(--txt3);font-size:18px">›</span>
+    </div>`).join('');
+}
+
+// ── MODAL ──
+function abrirModal(){
+  ['m-cod','m-ativo','m-mun','m-tec','m-ent','m-funcao','m-matricula'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('m-prev').textContent='';
+  document.getElementById('m-data').value=new Date().toISOString().slice(0,10);
+  // Reset rotina para completa
+  document.querySelectorAll('#rotina-grid .rotina-opt').forEach(el=>el.classList.remove('sel'));
+  document.querySelector('#rotina-grid [data-rotina="completa"]').classList.add('sel');
+  const m=document.getElementById('modal');m.style.display='flex';m.style.alignItems='flex-end';
+}
+function selecionarRotina(el){
+  document.querySelectorAll('#rotina-grid .rotina-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function fecharModal(){document.getElementById('modal').style.display='none';}
+function prevNome(){const c=document.getElementById('m-cod').value.trim().toUpperCase();document.getElementById('m-prev').textContent=c?'📄 '+c+'.docx':'';}
+
+async function criarOS(){
+  const cod=document.getElementById('m-cod').value.trim();
+  if(!cod){alert('Código OS obrigatório');return;}
+  const id=await db.os.add({
+    codigo:cod.toUpperCase(),
+    ativo:document.getElementById('m-ativo').value.trim(),
+    tipo:document.getElementById('m-tipo').value,
+    municipio:document.getElementById('m-mun').value.trim(),
+    uf:document.getElementById('m-uf').value,
+    data:document.getElementById('m-data').value,
+    tecnico:document.getElementById('m-tec').value.trim(),
+    entrevistado:document.getElementById('m-ent').value.trim(),
+    funcao:document.getElementById('m-funcao').value.trim(),
+    matricula:document.getElementById('m-matricula').value.trim(),
+    dados:{},fotosDados:null,finalizado:false,updatedAt:Date.now(),
+    rotina:document.querySelector('#rotina-grid .sel')?.dataset.rotina||'completa'
+  });
+  fecharModal();
+  await carregarLista();
+  abrirOS(id);
+}
+
+// ── ABRIR OS ──
+async function abrirOS(id){
+  osAtual=await db.os.get(id);
+  preencherForm(osAtual.dados||{});
+  initFotos(osAtual.fotosDados||null);
+  document.getElementById('f-titulo').textContent=osAtual.codigo;
+  document.getElementById('f-sub').textContent=`${osAtual.ativo||''} · ${osAtual.municipio||''}/${osAtual.uf||''}`;
+  buildSteps();irParaStep(0);
+  document.getElementById('screen-home').classList.remove('on');
+  document.getElementById('screen-form').classList.add('on');
+}
+
+function voltarHome(){salvar();document.getElementById('screen-form').classList.remove('on');document.getElementById('screen-home').classList.add('on');carregarLista();}
+
+// ── STEPS ──
+// Mapeamento de seções por rotina
+const ROTINA_SECS = {
+  completa: [0,1,2,3,4,5,6],
+  anexo1:   [0,1,2,3,4,5,6],  // Anexo1 = formulário completo + fotos (sem Anexo2 no export)
+  anexo2:   [6],               // Só fotos (Anexo2 é gerado a partir dos dados gerais)
+  fotos:    [6]
+};
+// Labels de seções
+const ALL_LBLS=['1·Ident','2·Oper','3·Qualid','4·Entorno','5·Histórico','6·Diagnóst','📷 Fotos'];
+const ROTINA_LBLS = {
+  completa: ALL_LBLS,
+  anexo1:   ALL_LBLS,
+  anexo2:   ['📝 Dados gerais','📷 Fotos'],
+  fotos:    ['📷 Fotos']
+};
+
+let rotinaAtual='completa', secsAtivas=[], secStep=0;
+
+function buildSteps(){
+  rotinaAtual = osAtual?.rotina||'completa';
+  // Para rotina "fotos" só a sec-6; "anexo2" sec-0 (dados gerais) + sec-6
+  if(rotinaAtual==='fotos'){
+    secsAtivas=[6]; secStep=0;
+  } else if(rotinaAtual==='anexo2'){
+    secsAtivas=[0,6]; secStep=0;
+  } else {
+    secsAtivas=[0,1,2,3,4,5,6]; secStep=0;
+  }
+  const lbls = ROTINA_LBLS[rotinaAtual]||ALL_LBLS;
+  document.getElementById('steps').innerHTML=lbls.map((l,i)=>`<button class="step-pill${i===0?' active':''}" onclick="irParaStep(${i})">${l}</button>`).join('');
+  // Mostrar só seções ativas
+  for(let i=0;i<7;i++){
+    const sec=document.getElementById('sec-'+i);
+    if(sec) sec.classList.remove('on');
+  }
+  // Adaptar export-bar: rotina fotos mostra só botão galeria
+  atualizarExportBar();
+}
+
+function irParaStep(stepIdx){
+  const prevSec=secsAtivas[secStep];
+  document.getElementById('sec-'+prevSec)?.classList.remove('on');
+  document.querySelectorAll('.step-pill')[secStep]?.classList.remove('active');
+  secStep=stepIdx;
+  const curSec=secsAtivas[secStep];
+  document.getElementById('sec-'+curSec)?.classList.add('on');
+  document.querySelectorAll('.step-pill')[secStep]?.classList.add('active');
+  document.getElementById('prog').style.width=Math.round((stepIdx/(secsAtivas.length-1||1))*100)+'%';
+  window.scrollTo(0,0);
+  if(curSec===6){ renderFotosObrig(); renderFotosExtra(); }
+  const last=secStep===secsAtivas.length-1;
+  document.getElementById('nav-btns').style.display=last?'none':'flex';
+  document.getElementById('export-bar').style.display=last?'flex':'none';
+  document.getElementById('btn-prev').style.display=secStep===0?'none':'';
+}
+
+// Compatibilidade com código antigo que chama irPara(idx) com índice global da seção
+function irPara(globalIdx){
+  const step=secsAtivas.indexOf(globalIdx);
+  if(step>=0) irParaStep(step);
+}
+
+function navSec(d){
+  const next=secStep+d;
+  if(next>=0&&next<secsAtivas.length) irParaStep(next);
+}
+
+function atualizarExportBar(){
+  const bar=document.getElementById('export-bar');
+  if(rotinaAtual==='fotos'){
+    bar.innerHTML=`<button class="btn-exp" style="background:#27ae60;color:#fff" onclick="salvarFotosNaGaleria()">💾 Salvar fotos na galeria</button>`;
+  } else if(rotinaAtual==='anexo1'){
+    bar.innerHTML=`<button class="btn-exp btn-word" onclick="exportWord('anexo1')">⬇ Word Anexo 1</button><button class="btn-exp btn-pdf" onclick="exportPDF('anexo1')">⬇ PDF Anexo 1</button>`;
+  } else if(rotinaAtual==='anexo2'){
+    bar.innerHTML=`<button class="btn-exp btn-word" onclick="exportWord('anexo2')">⬇ Word Anexo 2</button><button class="btn-exp btn-pdf" onclick="exportPDF('anexo2')">⬇ PDF Anexo 2</button>`;
+  } else {
+    bar.innerHTML=`<button class="btn-exp btn-word" onclick="exportWord('completa')">⬇ Word</button><button class="btn-exp btn-pdf" onclick="exportPDF('completa')">⬇ PDF</button>`;
+  }
+}
+
+async function salvarFotosNaGaleria(){
+  const ft=getAllFotos();
+  if(!ft.length){toast('Nenhuma foto para salvar');return;}
+  const nome=osAtual.ativo||osAtual.codigo;
+  for(let i=0;i<ft.length;i++){
+    const a=document.createElement('a');
+    a.href=ft[i].url;
+    a.download=`${nome}-${ft[i].legenda||('foto'+(i+1))}.jpg`.replace(/[/\\:*?"<>|]/g,'-');
+    a.click();
+    await new Promise(r=>setTimeout(r,300));
+  }
+  toast(`${ft.length} foto(s) salvas`);
+}
+
+// ── SELEÇÃO VISUAL ──
+document.addEventListener('change',e=>{
+  if(e.target.type==='radio'){
+    document.querySelectorAll(`input[name="${e.target.name}"]`).forEach(i=>i.closest('.opt')?.classList.remove('sel'));
+    e.target.closest('.opt')?.classList.add('sel');
+  }
+  if(e.target.type==='checkbox') e.target.closest('.opt')?.classList.toggle('sel',e.target.checked);
+});
+
+// ── COLETAR ──
+function coletarDados(){
+  const d={};
+  document.querySelectorAll('#screen-form input[type=radio]:checked').forEach(i=>d[i.name]=i.value);
+  const cbs={};
+  document.querySelectorAll('#screen-form input[type=checkbox]').forEach(i=>{
+    if(!cbs[i.name])cbs[i.name]=[];
+    if(i.checked)cbs[i.name].push(i.value);
+  });
+  Object.assign(d,cbs);
+  document.querySelectorAll('#screen-form input[type=text],#screen-form input[type=date],#screen-form textarea').forEach(i=>{if(i.id)d[i.id]=i.value;});
+  return d;
+}
+
+// ── PREENCHER ──
+function preencherForm(dados){
+  Object.entries(dados).forEach(([k,v])=>{
+    if(Array.isArray(v)){
+      v.forEach(val=>{const el=document.querySelector(`input[name="${k}"][value="${val}"]`);if(el){el.checked=true;el.closest('.opt')?.classList.add('sel');}});
+    } else {
+      const r=document.querySelector(`input[name="${k}"][value="${v}"]`);
+      if(r){r.checked=true;r.closest('.opt')?.classList.add('sel');}
+      const t=document.getElementById(k);if(t)t.value=v;
+    }
+  });
+}
+
+// ── SALVAR ──
+async function salvar(){
+  if(!osAtual)return;
+  await db.os.update(osAtual.id,{dados:coletarDados(),fotosDados:getFotosDados(),updatedAt:Date.now()});
+  osAtual=await db.os.get(osAtual.id);
+  toast('Salvo ✓');
+}
+
+// ── FOTOS ──
+function fmtDH(d){return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}  ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;}
+function fmtDeg(v,lat){return Math.abs(v).toFixed(6)+'° '+(v>=0?(lat?'N':'E'):(lat?'S':'W'));}
+
+function aplicarMarca(dataUrl,meta,cb){
+  const img=new Image();
+  img.onload=()=>{
+    const cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+    const ctx=cv.getContext('2d');ctx.drawImage(img,0,0);
+    const sc=img.width/1080,fs=Math.round(28*sc),pad=Math.round(20*sc),lh=Math.round(fs*1.6);
+    ctx.font=`bold ${fs}px monospace`;ctx.textAlign='right';ctx.textBaseline='top';
+    const linhas=[meta.dh];
+    if(meta.lat!=null){linhas.push(fmtDeg(meta.lat,true));linhas.push(fmtDeg(meta.lon,false));}
+    if(meta.cidade)linhas.push(meta.cidade);
+    if(meta.estado)linhas.push(meta.estado);
+    const x=img.width-pad,yB=pad;
+    const mw=linhas.reduce((a,l)=>Math.max(a,ctx.measureText(l).width),0);
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.fillRect(x-mw-pad*.5,yB-pad*.4,mw+pad,linhas.length*lh+pad*.8);
+    linhas.forEach((l,i)=>{ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillText(l,x+1,yB+1+i*lh);ctx.fillStyle='#fff';ctx.fillText(l,x,yB+i*lh);});
+    cb(cv.toDataURL('image/jpeg',.88));
+  };
+  img.src=dataUrl;
+}
+
+// ── FOTOS ──
+// fotosObrig: [{cat, desc, url}]  — uma por categoria obrigatória
+// fotosExtra: [{url, legenda}]    — fotos avulsas adicionais
+let fotosObrig = [], fotosExtra = [];
+
+function getCatsAtual(){
+  const tipo = osAtual?.tipo || 'PCO';
+  return (cfg.fotos_obrig[tipo] && cfg.fotos_obrig[tipo].length)
+    ? cfg.fotos_obrig[tipo]
+    : (CATS_PADRAO[tipo] || []);
+}
+
+function initFotos(dadosSalvos){
+  // dadosSalvos: {obrig:[{cat,desc,url}], extra:[{url,legenda}]}
+  const cats = getCatsAtual();
+  const salvoObrig = dadosSalvos?.obrig || [];
+  fotosObrig = cats.map(cat => {
+    const s = salvoObrig.find(x => x.cat === cat) || {};
+    return {cat, desc: s.desc||'', url: s.url||''};
+  });
+  fotosExtra = (dadosSalvos?.extra || []).slice();
+  renderFotosObrig();
+  renderFotosExtra();
+}
+
+function getFotosDados(){
+  return {
+    obrig: fotosObrig.map(f=>({cat:f.cat,desc:f.desc,url:f.url})),
+    extra: fotosExtra.map(f=>({url:f.url,legenda:f.legenda||''}))
+  };
+}
+
+// Numeração global: obrig primeiro, depois extra
+function numFoto(idx){ return idx+1; }
+
+// ── Render obrigatórias ──
+function renderFotosObrig(){
+  const el = document.getElementById('foto-obrig-grid');
+  if(!el) return;
+  el.innerHTML = fotosObrig.map((f,i) => `
+    <div class="foto-obrig-card${f.url?' ok':''}" id="fob-${i}">
+      <div class="foto-obrig-hdr">
+        <span class="foto-obrig-cat">📷 ${f.cat}</span>
+        <span class="foto-obrig-status ${f.url?'status-ok':'status-pend'}">${f.url?'✓ OK':'Pendente'}</span>
+      </div>
+      <div class="foto-obrig-body">
+        ${f.url ? `<img class="foto-obrig-preview" src="${f.url}">` : ''}
+        <div class="foto-obrig-desc">
+          <input placeholder="Descrição da foto (opcional)…" value="${(f.desc||'').replace(/"/g,'&quot;')}"
+            oninput="fotosObrig[${i}].desc=this.value;atualizarNumFotos()">
+        </div>
+        <div class="foto-obrig-actions">
+          <label class="btn-cam${f.url?' btn-cam-re':''}">
+            ${f.url?'🔄 Refazer':'📷 Tirar foto'}
+            <input type="file" accept="image/*" capture="environment" style="display:none"
+              onchange="handleFotoObrig(${i},this)">
+          </label>
+          ${f.url?`<button class="btn-cam-del" onclick="delFotoObrig(${i})">🗑</button>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function handleFotoObrig(idx, inp){
+  const agora = new Date();
+  const meta = {dh:fmtDH(agora),lat:gps?.latitude??null,lon:gps?.longitude??null,cidade:gpsCity,estado:gpsState};
+  const file = inp.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => setTimeout(()=>aplicarMarca(e.target.result,meta,url=>{
+    fotosObrig[idx].url = url;
+    renderFotosObrig();
+    atualizarNumFotos();
+    salvarFotos();
+  }),300);
+  reader.readAsDataURL(file);
+  inp.value='';
+}
+
+function delFotoObrig(idx){
+  fotosObrig[idx].url = '';
+  renderFotosObrig();
+  atualizarNumFotos();
+  salvarFotos();
+}
+
+// ── Render avulsas ──
+function renderFotosExtra(){
+  const el = document.getElementById('foto-grid');
+  if(!el) return;
+  const offset = fotosObrig.filter(f=>f.url).length;
+  el.innerHTML = fotosExtra.map((f,i) => `
+    <div class="foto-card">
+      <span class="foto-num">Foto ${offset+i+1}</span>
+      <button class="foto-del" onclick="delFotoExtra(${i})">✕</button>
+      <img class="foto-preview" src="${f.url}">
+      <div class="foto-leg"><input placeholder="Legenda…" value="${(f.legenda||'').replace(/"/g,'&quot;')}"
+        oninput="fotosExtra[${i}].legenda=this.value"></div>
+    </div>`).join('');
+}
+
+function atualizarNumFotos(){ renderFotosExtra(); }
+
+function delFotoExtra(i){ fotosExtra.splice(i,1); renderFotosExtra(); salvarFotos(); }
+
+async function salvarFotos(){
+  if(!osAtual) return;
+  await db.os.update(osAtual.id,{fotosDados:getFotosDados(),updatedAt:Date.now()});
+}
+
+document.getElementById('foto-inp').addEventListener('change',function(){
+  const agora=new Date();
+  const meta={dh:fmtDH(agora),lat:gps?.latitude??null,lon:gps?.longitude??null,cidade:gpsCity,estado:gpsState};
+  Array.from(this.files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>setTimeout(()=>aplicarMarca(e.target.result,meta,url=>{
+      fotosExtra.push({url,legenda:''});
+      renderFotosExtra();
+      salvarFotos();
+    }),300);
+    reader.readAsDataURL(file);
+  });
+  this.value='';
+});
+
+// Retorna lista final de fotos ordenada: obrig (com foto) + extra
+function getAllFotos(){
+  const obrig = fotosObrig
+    .filter(f=>f.url)
+    .map((f,i)=>({url:f.url, legenda:`${f.cat}${f.desc?' – '+f.desc:''}`}));
+  const extra = fotosExtra.map(f=>({url:f.url,legenda:f.legenda||'sem legenda'}));
+  return [...obrig,...extra].map((f,i)=>({...f,num:i+1}));
+}
+
+
+// ── HELPERS EXPORT ──
+function ex(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function mk(b){return b?'( x )':'(   )';}
+function dlBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}
+
+// ── EXPORT WORD ──
+async function exportWord(rotina){
+  rotina=rotina||rotinaAtual||'completa';
+  if(!osAtual){alert('Nenhuma OS');return;}
+  await salvar();
+  const d=osAtual.dados||{};
+  const ft=getAllFotos();
+  const incAnexo1=(rotina==='completa'||rotina==='anexo1');
+  const incAnexo2=(rotina==='completa'||rotina==='anexo2');
+  const incFotos=(rotina!=='fotos'); // fotos isoladas vão pra galeria
+
+  function chk(n){const v=d[n];return Array.isArray(v)?v:(v?[v]:[]);}
+  function vv(n){return d[n]||'';}
+  function par(txt,bold,ind){const b=bold?'<w:b/>':'';const f='<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>';const rpr=`<w:rPr>${f}${b}</w:rPr>`;const ppr=ind?`<w:pPr><w:ind w:left="${ind}"/></w:pPr>`:'';return`<w:p>${ppr}<w:r>${rpr}<w:t xml:space="preserve">${ex(txt)}</w:t></w:r></w:p>`;}
+  function opt(sel,lbl){return`<w:p><w:pPr><w:ind w:left="360"/><w:spacing w:after="20"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/></w:rPr><w:t xml:space="preserve">${mk(sel)} ${ex(lbl)}</w:t></w:r></w:p>`;}
+  function qT(txt){return`<w:p><w:pPr><w:spacing w:before="80" w:after="40"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/></w:rPr><w:t>${ex(txt)}</w:t></w:r></w:p>`;}
+  function secT(txt){return`<w:p><w:pPr><w:spacing w:before="200" w:after="60"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="22"/></w:rPr><w:t>${ex(txt)}</w:t></w:r></w:p>`;}
+  function blank(){return'<w:p><w:r><w:t> </w:t></w:r></w:p>';}
+
+  const BD='<w:top w:val="single" w:sz="4" w:color="000000"/><w:left w:val="single" w:sz="4" w:color="000000"/><w:bottom w:val="single" w:sz="4" w:color="000000"/><w:right w:val="single" w:sz="4" w:color="000000"/><w:insideH w:val="single" w:sz="4" w:color="000000"/><w:insideV w:val="single" w:sz="4" w:color="000000"/>';
+  function tc(txt,w,bold,bg){
+    const shd=bg?`<w:shd w:val="clear" w:fill="${bg}"/>`:'';
+    const FONT='<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>';return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${shd}<w:tcMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${FONT}${bold?'<w:b/>':''}</w:rPr><w:t xml:space="preserve">${ex(txt)}</w:t></w:r></w:p></w:tc>`;
+  }
+  function tcC(txt,w,span,bold,bg){
+    const shd=bg?`<w:shd w:val="clear" w:fill="${bg}"/>`:'';
+    const gs=span>1?`<w:gridSpan w:val="${span}"/>`:'';
+    const FONT='<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>';return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${gs}${shd}<w:tcMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>${FONT}${bold?'<w:b/>':''}</w:rPr><w:t>${ex(txt)}</w:t></w:r></w:p></w:tc>`;
+  }
+  function tcSpan(txt,w,span,bold,bg){
+    const shd=bg?`<w:shd w:val="clear" w:fill="${bg}"/>`:''
+    const gs=`<w:gridSpan w:val="${span}"/>`;
+    const FONT='<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>';return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${gs}${shd}<w:tcMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${FONT}${bold?'<w:b/>':''}</w:rPr><w:t xml:space="preserve">${ex(txt)}</w:t></w:r></w:p></w:tc>`;
+  }
+  function tbl(w,cols,rows){return`<w:tbl><w:tblPr><w:tblW w:w="${w}" w:type="dxa"/><w:tblBorders>${BD}</w:tblBorders></w:tblPr><w:tblGrid>${cols.map(c=>`<w:gridCol w:w="${c}"/>`).join('')}</w:tblGrid>${rows}</w:tbl>`;}
+
+  let B='';
+
+  // Título
+  B+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>ANEXO 2 – FORMULÁRIO DE AVALIAÇÃO PRELIMINAR</w:t></w:r></w:p>`;
+  B+=tbl(9026,[9026],`<w:tr>${tcC('FORMULÁRIO DE AVALIAÇÃO AMBIENTAL PRELIMINAR',9026,1,true,'D9D9D9')}</w:tr>`);
+  B+=blank();
+  // Código/Data/Revisão
+  B+=tbl(9026,[3008,3009,3009],
+    `<w:tr>${tc('CÓDIGO:',3008,true,'BFBFBF')}${tc('DATA:',3009,true,'BFBFBF')}${tc('REVISÃO:',3009,true,'BFBFBF')}</w:tr>`+
+    `<w:tr>${tc(osAtual.codigo,3008)}${tc(osAtual.data||'',3009)}${tc('00',3009)}</w:tr>`
+  );
+  B+=blank();
+  // Dados do Ativo
+  B+=tbl(9026,[2200,6826],
+    `<w:tr>${tcC('DADOS DO ATIVO:',9026,2,true,'BFBFBF')}</w:tr>`+
+    `<w:tr>${tc('Nome do Ativo:',2200,true,'D9D9D9')}${tc(osAtual.ativo||'',6826)}</w:tr>`+
+    `<w:tr>${tc('Endereço:',2200,true,'D9D9D9')}${tc(osAtual.endereco||'',6826)}</w:tr>`+
+    `<w:tr>${tc('Bairro:',2200,true,'D9D9D9')}${tc(osAtual.bairro||'',4526)}${tc('CEP:',700,true,'D9D9D9')}${tc(osAtual.cep||'',1600)}</w:tr>`+
+    `<w:tr>${tc('Município/UF:',2200,true,'D9D9D9')}${tc((osAtual.municipio||'')+'/'+(osAtual.uf||''),6826)}</w:tr>`
+  );
+  B+=blank();
+  // Dados da Visita
+  B+=tbl(9026,[2400,3613,1200,1813],
+    `<w:tr>${tcC('DADOS DA VISITA TÉCNICA:',9026,4,true,'BFBFBF')}</w:tr>`+
+    `<w:tr>${tc('Colaborador Próximus:',2400,true,'D9D9D9')}${tcSpan(osAtual.tecnico||'',6626,3)}</w:tr>`+
+    `<w:tr>${tc('Horário de início:',2400,true,'D9D9D9')}${tcSpan(osAtual.horario||'',6626,3)}</w:tr>`+
+    `<w:tr>${tc('Entrevistado:',2400,true,'D9D9D9')}${tc(osAtual.entrevistado||'',3613)}${tc('Matrícula:',1200,true,'D9D9D9')}${tc(osAtual.matricula||'',1813)}</w:tr>`+
+    `<w:tr>${tc('Função:',2400,true,'D9D9D9')}${tc(osAtual.funcao||'',3613)}${tc('Tempo na função:',1200,true,'D9D9D9')}${tc(osAtual.tempo||'',1813)}</w:tr>`+
+    `<w:tr>${tc('Data:',2400,true,'D9D9D9')}${tcSpan(osAtual.data||'',6626,3)}</w:tr>`
+  );
+  B+=blank();
+  // Banner POÇOS
+  if(incAnexo2){
+  B+=`<w:tbl><w:tblPr><w:tblW w:w="9026" w:type="dxa"/><w:tblBorders>${BD}</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="9026"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="9026" w:type="dxa"/><w:shd w:val="clear" w:fill="4472C4"/><w:tcMar><w:top w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="22"/></w:rPr><w:t>PO&#199;OS</w:t></w:r></w:p></w:tc></w:tr></w:tbl>`;
+
+  // ═══ SEÇÃO 1 ═══
+  B+=secT('1. IDENTIFICAÇÃO DO POÇO E CARACTERÍSTICAS CONSTRUTIVOS E INTEGRIDADE:');
+  B+=qT('1.1 Idade de perfuração/instalação:');
+  B+=opt(vv('q11')==='1-10','Entre 01 e 10 anos');
+  B+=opt(vv('q11')==='10-20','Entre 10 e 20 anos');
+  B+=opt(vv('q11')==='>20','Mais de 20 anos');
+  B+=opt(vv('q11')==='Desconhecido','Desconhecido');
+  B+=qT('1.2. Tipo:');
+  ['Tubular profundo','Tubular raso','Artesiano jorrante','Monitoramento','Drenante','Outro'].forEach(o=>B+=opt(vv('q12')===o,o==='Monitoramento'?'Poço de Monitoramento':o));
+  B+=qT('1.3 Possui outorga?');
+  ['Sim','Não','Em tramitação','Desconhecido'].forEach(o=>B+=opt(vv('q13')===o,o));
+  B+=qT('1.4. Aquífero:');
+  B+=par('1.5 Profundidade total: '+(vv('q15')||'Desconhecido'));
+  B+=par('1.6 Profundidade útil: '+(vv('q16')||'Desconhecido'));
+  B+=par('1.7 Diâmetro: '+(vv('q17')||'Desconhecido'));
+  B+=qT('1.8. Cabeçote / proteção superficial:');
+  [['Pedestal em concreto','Pedestal em concreto'],['Tampa com cadeado','Tampa com cadeado'],
+   ['Respiro com tela/curva U','Respiro com tela/curva "U"'],['Passa-cabos vedado','Passa-cabos vedado'],
+   ['Acima da cota de inundação','Poço acima da cota de inundação local'],
+   ['Abrigo/casa de bombas','Abrigo/casa de bombas'],['Cerca/perímetro de proteção','Cerca/perímetro de proteção']
+  ].forEach(([v2,l])=>B+=opt(chk('q18').includes(v2),l));
+  B+=qT('1.9. Presença selo sanitário (cimento/bentonita):');
+  ['Sim','Não','Desconhecido'].forEach(o=>B+=opt(vv('q19')===o,o));
+  B+=qT('1.10. Anel anular/pré-filtro:');
+  ['Areia','Brita','Desconhecido'].forEach(o=>B+=opt(vv('q110')===o,o));
+  B+=par('Observações: '+(vv('obs110')||''),false,360);
+  B+=qT('1.11. Revestimentos e filtros:');
+  ['Aço carbono','Aço inox','PVC geomecânico','PEAD','Outro','Desconhecido'].forEach(o=>B+=opt(vv('q111')===o,o==='PEAD'?'Tubo de Polietileno de Alta Densidade - PEAD':o));
+  B+=qT('1.12. Integridade Aparente dos revestimentos e filtros:');
+  ['Adequada','Corrosão','Deformação','Trincas/Fissuras','Desconhecido'].forEach(o=>B+=opt(vv('q112')===o,o));
+  B+=qT('1.13. Conservação, limpeza e organização geral:');
+  ['Adequada','Inadequada'].forEach(o=>B+=opt(vv('q113')===o,o));
+  B+=par('Observações: '+(vv('obs113')||''),false,360);
+  B+=qT('1.14. Padrão de drenagem do piso/entorno:');
+  [['Impermeável com drenagem','Piso impermeável com queda para drenagem'],
+   ['Solo exposto','Piso em solo exposto'],['Canaletas/bacia','Canaletas/bacia de contenção']
+  ].forEach(([v2,l])=>B+=opt(vv('q114')===v2,l));
+  B+=qT('1.15. Erosão/encharcamento próximo ao poço:');
+  ['Sim','Não','Desconhecido'].forEach(o=>B+=opt(vv('q115')===o,o));
+
+  // ═══ SEÇÃO 2 ═══
+  B+=secT('2. OPERAÇÃO, EQUIPAMENTOS E SEGURANÇA');
+  B+=qT('2.1 Bombeamento (tipo):');
+  ['Submersa','Centrífuga de superfície','Ejetora','Manual','Outro'].forEach(o=>B+=opt(vv('q21')===o,o));
+  B+=par('Potência (em CV): '+(vv('q21cv')||'Desconhecido'),true,360);
+  B+=qT('2.2 Vibração/ruído anormal:');
+  ['Sim','Não'].forEach(o=>B+=opt(vv('q22')===o,o));
+  B+=qT('2.3 Instrumentação');
+  ['Hidrômetro','Manômetro','Medidor de nível (piezômetro/datalogger)','Válvula de retenção'].forEach(o=>B+=opt(chk('q23').includes(o),o));
+  const q23e=chk('q23e');
+  B+=`<w:p><w:pPr><w:ind w:left="360"/></w:pPr><w:r><w:t xml:space="preserve">${mk(q23e.length>0)} Quadro elétrico com sinalização: ${mk(q23e.includes('Sonoro'))} sonoro ; ${mk(q23e.includes('Visual'))} visual ; ${mk(q23e.includes('Aterramento/DR'))} aterramento/DR</w:t></w:r></w:p>`;
+  B+=qT('2.4 Condições do painel:');
+  ['Adequadas','Inadequadas'].forEach(o=>B+=opt(vv('q24')===o,o));
+  B+=qT('2.5 Produtos/insumos associados:');
+  ['Cloração/hipoclorito','Limpeza química','Lubrificantes/óleos','Não se aplica'].forEach(o=>B+=opt(chk('q25').includes(o),o));
+  B+=qT('2.6 Armazenamento:');
+  ['Área coberta com contenção','Área aberta sem contenção','N/A'].forEach(o=>B+=opt(vv('q26')===o,o));
+  B+=qT('2.7 Eventos operacionais:');
+  B+=opt(chk('q27').includes('Extravasos/transbordos'),'Extravasos/transbordos em caixa de proteção:');
+  B+=opt(chk('q27').includes('Alagamento recorrente'),'Alagamento recorrente');
+  B+=qT('2.8 Manutenções preventivas:');
+  ['Mensal','Trimestral','Semestral','Anual','Não realizada'].forEach(o=>B+=opt(vv('q28')===o,o));
+
+  // ═══ SEÇÃO 3 ═══
+  B+=secT('3. QUALIDADE E MONITORAMENTO DA ÁGUA (QUANDO APLICÁVEL)');
+  B+=qT("3.1 Monitoramento de nível d'água (NA):");
+  B+=par('Nível estático: '+(vv('q31e')||'Desconhecido'));
+  B+=par('Nível dinâmico: '+(vv('q31d')||'Desconhecido'));
+  B+=par('Data: '+(vv('q31dt')||''));
+  B+=par('3.2 Vazão típica: '+(vv('q32')||'Desconhecido'),true);
+  B+=par('3.3 Tempo de operação diário: '+(vv('q33')||'Desconhecido'),true);
+  B+=qT('3.4 Monitoramento de qualidade:');
+  ['Sim','Não','Desconhecido'].forEach(o=>B+=opt(vv('q34')===o,o));
+  B+=qT('3.5 Parâmetros monitorados:');
+  ['Turbidez','pH','Cloro','Ferro/Mn','Coliformes','STD'].forEach(o=>B+=opt(chk('q35').includes(o),o==='STD'?'Sólidos Totais Dissolvidos':o));
+  B+=par('( ) Outros: '+(vv('q35out')||''),false,360);
+  B+=qT('4.4 Histórico de não conformidade:');
+  B+=opt(vv('q36')==='Sim','Sim, descrição sucinta: '+(vv('obs36')||''));
+  B+=opt(vv('q36')==='Não','Não');
+  B+=opt(vv('q36')==='Desconhecido','Desconhecido');
+
+  // ═══ SEÇÃO 4 ═══
+  B+=secT('4. CARACTERIZAÇÃO DO ENTORNO');
+  B+=qT('4.1 Distância até a edificação mais próxima à área:');
+  [['< 10 m','< 10m'],['10–50 m','10m – 50m'],['50–100 m','50m – 100m'],['> 100 m','> 100m']].forEach(([v2,l])=>B+=opt(vv('q41')===v2,l));
+  B+=qT('4.2 Classificação dos empreendimentos no entorno da área:');
+  ['Área de vegetação natural','Zona residencial','Estabelecimento comercial','Complexo industrial','Instituição educacional','Outros'].forEach(o=>B+=opt(chk('q42').includes(o),o));
+  B+=qT('4.3 Presença de cursos/corpos hídricos próximos da área sendo utilizados:');
+  [['Abastecimento domiciliar','Sim, para abastecimento domiciliar'],['Recreação','Sim, para recreação'],
+   ['Dessedentação animal','Sim, para dessedentação animal'],['Irrigação','Sim, para irrigação'],
+   ['Utilização desconhecida','Sim, com utilização desconhecida'],['Não há presença','Não há presença'],['Desconhecido','Desconhecido']
+  ].forEach(([v2,l])=>B+=opt(chk('q43').includes(v2),l));
+  B+=qT('4.4 Presença de poços próximos da área sendo utilizados:');
+  [['Abastecimento domiciliar','Sim, para abastecimento domiciliar'],['Recreação','Sim, para recreação'],
+   ['Dessedentação animal','Sim, para dessedentação animal'],['Irrigação','Sim, para irrigação'],
+   ['Utilização desconhecida','Sim, com utilização desconhecida'],['Não há presença','Não há presença'],['Desconhecido','Desconhecido']
+  ].forEach(([v2,l])=>B+=opt(chk('q44').includes(v2),l));
+  B+=qT('4.5 Presença de cacimba próxima da área sendo utilizados:');
+  [['Abastecimento domiciliar','Sim, para abastecimento domiciliar'],['Recreação','Sim, para recreação'],
+   ['Dessedentação animal','Sim, para dessedentação animal'],['Irrigação','Sim, para irrigação'],
+   ['Utilização desconhecida','Sim, com utilização desconhecida'],['Não há presença','Não há presença'],['Desconhecido','Desconhecido']
+  ].forEach(([v2,l])=>B+=opt(chk('q45').includes(v2),l));
+  B+=qT('4.6 Presença de chafariz próxima da área sendo utilizados:');
+  [['Abastecimento domiciliar','Sim, para abastecimento domiciliar'],['Recreação','Sim, para recreação'],
+   ['Dessedentação animal','Sim, para dessedentação animal'],['Irrigação','Sim, para irrigação'],
+   ['Utilização desconhecida','Sim, com utilização desconhecida'],['Não há presença','Não há presença'],['Desconhecido','Desconhecido']
+  ].forEach(([v2,l])=>B+=opt(chk('q46').includes(v2),l));
+  B+=qT('4.7 Há disposição de resíduos sólidos ou rejeitos no entorno:');
+  [['Doméstico','Sim, do tipo doméstico'],['Industrial','Sim, do tipo industrial'],
+   ['Construção civil','Sim, para construção civil'],['Classificação desconhecida','Sim, com classificação desconhecida'],
+   ['Não há','Não há']
+  ].forEach(([v2,l])=>B+=opt(chk('q47').includes(v2),l));
+  if(vv('obs47'))B+=par('Obs. '+vv('obs47'),false,360);
+  B+=qT('4.8 Modalidade de disposição de resíduos sólidos e/ou rejeitos no entorno:');
+  ['Deposição sobre a superfície','Enterrado','Combinação superficial e subterrânea','N/A'].forEach(o=>B+=opt(vv('q48')===o,o==='Deposição sobre a superfície'?'Deposição sobre a superfície da estação':o==='Enterrado'?'Enterrado abaixo da superfície da estação':o));
+
+  // ═══ SEÇÃO 5 ═══
+  B+=secT('5. HISTÓRICO DE USO E OCUPAÇÃO DA ÁREA:');
+  B+=qT('5.1 Atividade(s) preexistente(s):');
+  [['Vegetação natural','Área de vegetação natural'],['Uso residencial','Uso residencial'],
+   ['Uso comercial','Uso comercial'],['Uso industrial','Uso industrial'],['Desconhecido','Uso desconhecido']
+  ].forEach(([v2,l])=>B+=opt(chk('q51').includes(v2),l));
+  B+=qT('5.2 Ocorrência de explosão ou incêndio na área:');
+  [['Sim – substâncias inflamáveis','Sim, por vazamento de substâncias inflamáveis'],
+   ['Sim – curto-circuito/falha elétrica','Sim, por curto-circuito ou falha elétrica'],
+   ['Sim – acúmulo de gases','Sim, por acúmulo de gases inflamáveis'],
+   ['Sim – vandalismo/incêndio criminoso','Sim, por ação intencional (vandalismo/incêndio criminoso)'],
+   ['Não','Não'],['Desconhecido','Desconhecido']
+  ].forEach(([v2,l])=>B+=opt(vv('q52')===v2,l));
+  B+=qT('5.3 Elaboração de Estudos Ambientais Anteriores:');
+  ['Sim','Não','Desconhecido'].forEach(o=>B+=opt(vv('q53')===o,o));
+  B+=qT('5.4 Notificações de infração por parte de algum orgão ambiental:');
+  ['Sim','Não','Desconhecido'].forEach(o=>B+=opt(vv('q54')===o,o));
+  if(vv('obs54'))B+=par('Obs. '+vv('obs54'),false,360);
+
+  // ═══ SEÇÃO 6 ═══
+  B+=secT('6. DIAGNÓSTICO PRELIMINAR');
+  B+=qT('6.1 Índicios de contaminação – Existencia de solo e/ou água subterrânea contaminados:');
+  ['Potencial de contaminação','Suspeita de contaminação','Contaminada'].forEach(o=>B+=opt(vv('q61')===o,o));
+  B+=qT('6.2 Índicios de contaminação – Fonte potencial de contaminação:');
+  B+=`<w:p><w:pPr><w:spacing w:before="40" w:after="10"/></w:pPr><w:r><w:rPr><w:b/><w:u w:val="single"/></w:rPr><w:t>Gerais:</w:t></w:r></w:p>`;
+  [['Vazamentos/exfiltrações em tubulações','Vazamentos/Exfiltrações em tubulações, flanges, válvulas, bombas e tanques'],
+   ['Infiltrações em pisos/juntas','Infiltrações em pisos, juntas, valas, canaletas ou bacias de contenção'],
+   ['Manchas no solo/piso/parede','Manchas no solo/piso/parede (óleos e graxas, produtos químicos, lodo)'],
+   ['Estado de conservação comprometido','Estado de conservação de estruturas e equipamentos (corrosão, trincas, fissuras)'],
+   ['Armazenamento inadequado de resíduos','Armazenamento inadequado de resíduos, lodos e rejeitos (sem contenção/etiquetagem)'],
+   ['Armazenamento inadequado de insumos','Armazenamento inadequado de matérias-primas/insumos/produtos (sem bacia de contenção)'],
+   ['Drenagem pluvial em área de processo','Drenagem pluvial cruzando áreas de processo/armazenamento (risco de carreamento)'],
+   ['Gerador/transformador sem contenção','Gerador/transformador com óleo/combustível sem contenção ou com vazamentos'],
+   ['Oficina/manutenção (óleos, solventes)','Oficina/manutenção (óleo usado, solventes, baterias, estopas contaminadas)'],
+   ['Não há indícios','Não há indícios de contaminação'],
+  ].forEach(([v2,l])=>B+=opt(chk('q62g').includes(v2),l));
+  if(vv('obs62g'))B+=par('( ) Outros: '+vv('obs62g'),false,360);
+  B+=`<w:p><w:pPr><w:spacing w:before="40" w:after="10"/></w:pPr><w:r><w:rPr><w:b/><w:u w:val="single"/></w:rPr><w:t>Específicos:</w:t></w:r></w:p>`;
+  [['Cabeçote danificado','Cabeçote danificado (falta de tampa, vedação, respiro sem tela, passa-cabos aberto)'],
+   ['Ausência/deficiência de selo sanitário','Ausência/deficiência de selo sanitário (percolação pelo anel anular)'],
+   ['Revestimento/filtro comprometido','Revestimento/filtro comprometido (corrosão, colapso, ruptura)'],
+   ['Extravaso em caixa de proteção','Extravaso em caixa de proteção / tubulação de descarga / by-pass para o solo'],
+   ['Inundação recorrente do poço','Inundação recorrente do poço/abrigo (instalado em cota baixa)'],
+   ['Cruzamento com rede de esgoto','Cruzamento de rede de esgoto/drenagem junto ao poço'],
+   ['Cloro sem contenção','Aplicação/armazenamento de cloro/hipo sem contenção, piso atacado'],
+   ['Óleos/graxas no entorno','Óleos e graxas de bombas/geradores (manchas no entorno)'],
+   ['Retrolavagem no solo','Ensaio/retrolavagem descarregada no solo/corpo hídrico sem controle'],
+   ['Fauna/vetores no abrigo','Fauna/vetores (insetos/roedores) e material biológico no abrigo'],
+   ['Poços adjacentes interconectados','Poços adjacentes interconectados sem válvulas de retenção/retorno'],
+  ].forEach(([v2,l])=>B+=opt(chk('q62e').includes(v2),l));
+  B+=qT('6.3 Recomenda-se investigação confirmatória (Fase 2) – Análise de prévia de campo?');
+  ['Sim','Não'].forEach(o=>B+=opt(vv('q63')===o,o));
+  if(vv('q63txt'))B+=`<w:p><w:pPr><w:jc w:val="both"/><w:spacing w:before="120" w:after="60"/></w:pPr><w:r><w:t xml:space="preserve">${ex(vv('q63txt'))}</w:t></w:r></w:p>`;
+  } // fim incAnexo2
+
+  // ═══ ANEXO 3 ═══
+  if(incAnexo1&&ft.length){
+  B+=`<w:tbl><w:tblPr><w:tblW w:w="9026" w:type="dxa"/><w:tblBorders>${BD}</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="9026"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="9026" w:type="dxa"/><w:shd w:val="clear" w:fill="2E4057"/><w:tcMar><w:top w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="22"/></w:rPr><w:t>ANEXO 3 &#8211; REGISTRO FOTOGR&#193;FICO</w:t></w:r></w:p></w:tc></w:tr></w:tbl>`;
+  B+=tbl(9026,[9026],`<w:tr>${tcC('REGISTRO FOTOGRÁFICO',9026,1,true,'D9D9D9')}</w:tr>`);
+  B+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>${ex(osAtual.codigo+' - '+(osAtual.ativo||''))}</w:t></w:r></w:p>`;
+
+  // Tabela fotos 2 colunas
+  if(ft.length){
+    let fRows='';
+    for(let i=0;i<ft.length;i+=2){
+      const a=ft[i],b=ft[i+1];
+      const fCell=(foto,idx)=>`<w:tc><w:tcPr><w:tcW w:w="4513" w:type="dxa"/><w:tcBorders><w:top w:val="single" w:sz="4" w:color="000000"/><w:left w:val="single" w:sz="4" w:color="000000"/><w:bottom w:val="single" w:sz="4" w:color="000000"/><w:right w:val="single" w:sz="4" w:color="000000"/></w:tcBorders><w:tcMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr>`+
+        `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Foto ${idx+1} – ${ex(foto.legenda||'sem legenda')}</w:t></w:r></w:p>`+
+        `<w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="120"/></w:rPr><w:t> </w:t></w:r></w:p>`+
+        `<w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="120"/></w:rPr><w:t> </w:t></w:r></w:p>`+
+        `<w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="120"/></w:rPr><w:t> </w:t></w:r></w:p>`+
+        `<w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="120"/></w:rPr><w:t> </w:t></w:r></w:p>`+
+        `</w:tc>`;
+      const emptyCell=`<w:tc><w:tcPr><w:tcW w:w="4513" w:type="dxa"/></w:tcPr><w:p><w:r><w:t> </w:t></w:r></w:p></w:tc>`;
+      fRows+=`<w:tr>${fCell(a,i)}${b?fCell(b,i+1):emptyCell}</w:tr>`;
+    }
+    B+=tbl(9026,[4513,4513],fRows);
+  } else if(!incAnexo1){
+    B+=par('Nenhuma foto registrada.');
+  }
+  } // fim incAnexo1
+
+  const sectPr=`<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>`;
+  const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${sectPr}${B}</w:body></w:document>`;
+
+  const zip=new PizZip();
+  zip.file('[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file('_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file('word/document.xml',docXml);
+  zip.file('word/_rels/document.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>');
+  const blob=zip.generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  dlBlob(blob,osAtual.codigo+'.docx');
+}
+
+// ── EXPORT PDF ──
+async function exportPDF(rotina){
+  rotina=rotina||rotinaAtual||'completa';
+  if(!osAtual){alert('Nenhuma OS');return;}
+  await salvar();
+  const d=osAtual.dados||{};
+  const ft=getAllFotos();
+  const incAnexo1=(rotina==='completa'||rotina==='anexo1');
+  const incAnexo2=(rotina==='completa'||rotina==='anexo2');
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const ML=15,TW=180;let y=20;
+  function chk(n){const v=d[n];return Array.isArray(v)?v:(v?[v]:[]);}
+  function vv(n){return d[n]||'';}
+  function line(text,opts={}){
+    const fs=opts.size||10;doc.setFontSize(fs);doc.setFont('helvetica',opts.bold?'bold':'normal');
+    doc.setTextColor(...(opts.color||[30,30,30]));
+    doc.splitTextToSize(String(text||''),TW).forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,ML+(opts.indent||0),y);y+=fs*0.38+1.8;});
+  }
+  function gap(n=4){y+=n;}
+  function optLine(sel,lbl){line((sel?'( x )':'(   )')+' '+lbl,{indent:5});}
+  function secT2(t){gap(4);line(t,{bold:true,size:11,color:[20,50,120]});gap(1);}
+  function qT2(t){gap(2);line(t,{bold:true});}
+
+  // ── Helpers de tabela PDF ──
+  const PW=180; // largura total da página (190 - 2*ML=15... usa 180)
+  function pdfTbl(rows){
+    // rows: [{cells:[{text,w,bold,bg,center}]}]
+    rows.forEach(r=>{
+      if(y+7>280){doc.addPage();y=10;}
+      let cx=ML;
+      r.cells.forEach(c=>{
+        const h=c.h||7;
+        doc.setDrawColor(0,0,0);doc.setLineWidth(0.3);
+        if(c.bg){const rgb=hexRgb(c.bg);doc.setFillColor(...rgb);doc.rect(cx,y,c.w,h,'FD');}
+        else doc.rect(cx,y,c.w,h);
+        const fs=c.size||9;
+        doc.setFontSize(fs);doc.setFont('helvetica',c.bold?'bold':'normal');
+        doc.setTextColor(...(c.fg||[30,30,30]));
+        const tx=c.center?cx+c.w/2:cx+1.5;
+        const align=c.center?'center':'left';
+        const lines=doc.splitTextToSize(String(c.text||''),c.w-3);
+        doc.text(lines[0]||'',tx,y+h/2+fs*0.18,{align});
+        cx+=c.w;
+      });
+      y+=r.cells[0].h||7;
+    });
+  }
+  function hexRgb(h){const n=parseInt(h,16);return[n>>16,(n>>8)&255,n&255];}
+
+  // Título
+  y=10;
+  if(incAnexo2){
+  doc.setFillColor(68,114,196);doc.rect(0,0,210,15,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('ANEXO 2 – FORMULÁRIO DE AVALIAÇÃO PRELIMINAR',105,10,{align:'center'});
+  y=16;
+  // Banner formulário
+  pdfTbl([{cells:[{text:'FORMULÁRIO DE AVALIAÇÃO AMBIENTAL PRELIMINAR',w:PW,bold:true,bg:'D9D9D9',center:true,h:8}]}]);
+
+  // Código / Data / Revisão
+  pdfTbl([
+    {cells:[{text:'CÓDIGO:',w:60,bold:true,bg:'BFBFBF'},{text:'DATA:',w:60,bold:true,bg:'BFBFBF'},{text:'REVISÃO:',w:60,bold:true,bg:'BFBFBF'}]},
+    {cells:[{text:osAtual.codigo,w:60},{text:osAtual.data||'',w:60},{text:'00',w:60}]},
+  ]);
+
+  // Dados do Ativo
+  pdfTbl([
+    {cells:[{text:'DADOS DO ATIVO:',w:PW,bold:true,bg:'BFBFBF',center:true}]},
+    {cells:[{text:'Nome do Ativo:',w:40,bold:true,bg:'D9D9D9'},{text:osAtual.ativo||'',w:140}]},
+    {cells:[{text:'Endereço:',w:40,bold:true,bg:'D9D9D9'},{text:osAtual.endereco||'',w:140}]},
+    {cells:[{text:'Bairro:',w:40,bold:true,bg:'D9D9D9'},{text:osAtual.bairro||'',w:85},{text:'CEP:',w:15,bold:true,bg:'D9D9D9'},{text:osAtual.cep||'',w:40}]},
+    {cells:[{text:'Município/UF:',w:40,bold:true,bg:'D9D9D9'},{text:(osAtual.municipio||'')+'/'+(osAtual.uf||''),w:140}]},
+  ]);
+
+  // Dados da Visita
+  pdfTbl([
+    {cells:[{text:'DADOS DA VISITA TÉCNICA:',w:PW,bold:true,bg:'BFBFBF',center:true}]},
+    {cells:[{text:'Colaborador Próximus:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.tecnico||'',w:135}]},
+    {cells:[{text:'Horário de início:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.horario||'',w:135}]},
+    {cells:[{text:'Entrevistado:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.entrevistado||'',w:70},{text:'Matrícula:',w:25,bold:true,bg:'D9D9D9'},{text:osAtual.matricula||'',w:40}]},
+    {cells:[{text:'Função:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.funcao||'',w:70},{text:'Tempo na função:',w:25,bold:true,bg:'D9D9D9',size:7},{text:osAtual.tempo||'',w:40}]},
+    {cells:[{text:'Data:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.data||'',w:135}]},
+  ]);
+
+  // Banner POÇOS
+  pdfTbl([{cells:[{text:'POÇOS',w:PW,bold:true,bg:'4472C4',center:true,fg:[255,255,255]}]}]);
+  gap(2);
+
+  secT2('1. IDENTIFICAÇÃO DO POÇO E INTEGRIDADE');
+  qT2('1.1 Idade:');optLine(vv('q11')==='1-10','1–10 anos');optLine(vv('q11')==='10-20','10–20 anos');optLine(vv('q11')==='>20','> 20 anos');optLine(vv('q11')==='desc','Desconhecido');
+  qT2('1.2 Tipo:');['Tubular profundo','Tubular raso','Artesiano jorrante','Monitoramento','Drenante','Outro'].forEach(o=>optLine(vv('q12')===o,o));
+  qT2('1.3 Outorga:');['Sim','Não','Em tramitação','Desconhecido'].forEach(o=>optLine(vv('q13')===o,o));
+  line('1.4 Aquífero: '+(vv('q14')||'—')+'   1.5 Prof.total: '+(vv('q15')||'Desc')+'   1.6 Prof.útil: '+(vv('q16')||'Desc')+'   1.7 Diâm: '+(vv('q17')||'Desc'));
+  qT2('1.8 Cabeçote:');['Pedestal em concreto','Tampa com cadeado','Respiro com tela/curva U','Passa-cabos vedado','Acima da cota de inundação','Abrigo/casa de bombas','Cerca/perímetro de proteção'].forEach(o=>optLine(chk('q18').includes(o),o));
+  qT2('1.9 Selo sanitário:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q19')===o,o));
+  qT2('1.10 Anel anular:');['Areia','Brita','Desconhecido'].forEach(o=>optLine(vv('q110')===o,o));if(vv('obs110'))line('Obs: '+vv('obs110'),{indent:5});
+  qT2('1.11 Revestimento:');['Aço carbono','Aço inox','PVC geomecânico','PEAD','Outro','Desconhecido'].forEach(o=>optLine(vv('q111')===o,o));
+  qT2('1.12 Integridade:');['Adequada','Corrosão','Deformação','Trincas/Fissuras','Desconhecido'].forEach(o=>optLine(vv('q112')===o,o));
+  qT2('1.13 Conservação:');['Adequada','Inadequada'].forEach(o=>optLine(vv('q113')===o,o));if(vv('obs113'))line('Obs: '+vv('obs113'),{indent:5});
+  qT2('1.14 Drenagem:');['Impermeável com drenagem','Solo exposto','Canaletas/bacia'].forEach(o=>optLine(vv('q114')===o,o));
+  qT2('1.15 Erosão/encharcamento:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q115')===o,o));
+
+  secT2('2. OPERAÇÃO, EQUIPAMENTOS E SEGURANÇA');
+  qT2('2.1 Bombeamento:');['Submersa','Centrífuga de superfície','Ejetora','Manual','Outro'].forEach(o=>optLine(vv('q21')===o,o));line('Potência: '+(vv('q21cv')||'Desc'),{indent:5});
+  qT2('2.2 Vibração/ruído:');['Sim','Não'].forEach(o=>optLine(vv('q22')===o,o));
+  qT2('2.3 Instrumentação:');['Hidrômetro','Manômetro','Medidor de nível','Válvula de retenção'].forEach(o=>optLine(chk('q23').includes(o),o));
+  const e23=chk('q23e');line(`Painel: ${(e23.includes('Sonoro')?'( x )':'(   )') } sonoro ; ${(e23.includes('Visual')?'( x )':'(   )')} visual ; ${(e23.includes('Aterramento/DR')?'( x )':'(   )')} aterramento/DR`,{indent:5});
+  qT2('2.4 Painel elétrico:');['Adequadas','Inadequadas'].forEach(o=>optLine(vv('q24')===o,o));
+  qT2('2.5 Insumos:');['Cloração/hipoclorito','Limpeza química','Lubrificantes/óleos','Não se aplica'].forEach(o=>optLine(chk('q25').includes(o),o));
+  qT2('2.6 Armazenamento:');['Área coberta com contenção','Área aberta sem contenção','N/A'].forEach(o=>optLine(vv('q26')===o,o));
+  qT2('2.7 Eventos:');['Extravasos/transbordos','Alagamento recorrente','Nenhum observado'].forEach(o=>optLine(chk('q27').includes(o),o));
+  qT2('2.8 Manutenção:');['Mensal','Trimestral','Semestral','Anual','Não realizada'].forEach(o=>optLine(vv('q28')===o,o));
+
+  secT2('3. QUALIDADE E MONITORAMENTO DA ÁGUA');
+  line('NA estático: '+(vv('q31e')||'Desc')+'   Dinâmico: '+(vv('q31d')||'Desc')+'   Data: '+(vv('q31dt')||''));
+  line('Vazão: '+(vv('q32')||'Desc')+'   Operação diária: '+(vv('q33')||'Desc'));
+  qT2('3.4 Monitoramento:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q34')===o,o));
+  qT2('3.5 Parâmetros:');['Turbidez','pH','Cloro','Ferro/Mn','Coliformes','STD'].forEach(o=>optLine(chk('q35').includes(o),o));if(vv('q35out'))line('Outros: '+vv('q35out'),{indent:5});
+  qT2('Histórico NC:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q36')===o,o));if(vv('obs36'))line(vv('obs36'),{indent:5});
+
+  secT2('4. CARACTERIZAÇÃO DO ENTORNO');
+  qT2('4.1 Distância:');['< 10 m','10–50 m','50–100 m','> 100 m'].forEach(o=>optLine(vv('q41')===o,o));
+  qT2('4.2 Empreendimentos:');['Área de vegetação natural','Zona residencial','Estabelecimento comercial','Complexo industrial','Instituição educacional','Outros'].forEach(o=>optLine(chk('q42').includes(o),o));
+  qT2('4.3 Corpos hídricos:');['Abastecimento domiciliar','Recreação','Dessedentação animal','Irrigação','Utilização desconhecida','Não há presença','Desconhecido'].forEach(o=>optLine(chk('q43').includes(o),o));
+  qT2('4.4 Poços:');['Abastecimento domiciliar','Recreação','Dessedentação animal','Irrigação','Utilização desconhecida','Não há presença','Desconhecido'].forEach(o=>optLine(chk('q44').includes(o),o));
+  qT2('4.5 Cacimba:');['Abastecimento domiciliar','Recreação','Dessedentação animal','Irrigação','Utilização desconhecida','Não há presença','Desconhecido'].forEach(o=>optLine(chk('q45').includes(o),o));
+  qT2('4.6 Chafariz:');['Abastecimento domiciliar','Recreação','Dessedentação animal','Irrigação','Utilização desconhecida','Não há presença','Desconhecido'].forEach(o=>optLine(chk('q46').includes(o),o));
+  qT2('4.7 Resíduos:');['Doméstico','Industrial','Construção civil','Classificação desconhecida','Não há'].forEach(o=>optLine(chk('q47').includes(o),o));if(vv('obs47'))line('Obs: '+vv('obs47'),{indent:5});
+  qT2('4.8 Modalidade:');['Deposição sobre a superfície','Enterrado','Combinação superficial e subterrânea','N/A'].forEach(o=>optLine(vv('q48')===o,o));
+
+  secT2('5. HISTÓRICO DE USO E OCUPAÇÃO');
+  qT2('5.1 Atividades:');['Vegetação natural','Uso residencial','Uso comercial','Uso industrial','Desconhecido'].forEach(o=>optLine(chk('q51').includes(o),o));
+  qT2('5.2 Explosão/incêndio:');['Sim – substâncias inflamáveis','Sim – curto-circuito/falha elétrica','Sim – acúmulo de gases','Sim – vandalismo/incêndio criminoso','Não','Desconhecido'].forEach(o=>optLine(vv('q52')===o,o));
+  qT2('5.3 Estudos anteriores:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q53')===o,o));
+  qT2('5.4 Notificações:');['Sim','Não','Desconhecido'].forEach(o=>optLine(vv('q54')===o,o));if(vv('obs54'))line('Obs: '+vv('obs54'),{indent:5});
+
+  secT2('6. DIAGNÓSTICO PRELIMINAR');
+  qT2('6.1 Situação:');['Potencial de contaminação','Suspeita de contaminação','Contaminada'].forEach(o=>optLine(vv('q61')===o,o));
+  qT2('6.2 Fontes gerais:');['Vazamentos/exfiltrações em tubulações','Infiltrações em pisos/juntas','Manchas no solo/piso/parede','Estado de conservação comprometido','Armazenamento inadequado de resíduos','Armazenamento inadequado de insumos','Drenagem pluvial em área de processo','Gerador/transformador sem contenção','Oficina/manutenção (óleos, solventes)','Não há indícios'].forEach(o=>optLine(chk('q62g').includes(o),o));if(vv('obs62g'))line('Outros: '+vv('obs62g'),{indent:5});
+  qT2('6.2 Fontes específicas:');['Cabeçote danificado','Ausência/deficiência de selo sanitário','Revestimento/filtro comprometido','Extravaso em caixa de proteção','Inundação recorrente do poço','Cruzamento com rede de esgoto','Cloro sem contenção','Óleos/graxas no entorno','Retrolavagem no solo','Fauna/vetores no abrigo','Poços adjacentes interconectados'].forEach(o=>optLine(chk('q62e').includes(o),o));
+  qT2('6.3 Recomenda Fase 2:');['Sim','Não'].forEach(o=>optLine(vv('q63')===o,o));if(vv('q63txt')){gap(2);line(vv('q63txt'));}
+  } // fim incAnexo2
+
+  // FOTOS
+  if(incAnexo1&&ft.length){
+    doc.addPage();y=20;
+    doc.setFillColor(68,114,196);doc.rect(0,0,210,16,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text('ANEXO 3 – REGISTRO FOTOGRÁFICO',ML,11);
+    doc.setTextColor(30,30,30);y=24;
+    line(osAtual.codigo+' - '+(osAtual.ativo||''),{bold:true});gap(4);
+
+    // 2 colunas: paisagem ocupa largura total da coluna, retrato mantém proporção na mesma altura
+    const COL_W=PW/2, LEG_H=7;
+    // Altura base = foto paisagem que cabe na coluna (proporção 4:3 → h = COL_W * 3/4)
+    const IMG_H=Math.round(COL_W*3/4);
+    const CELL_H=LEG_H+IMG_H;
+    const x1=ML, x2=ML+COL_W;
+    function drawCell(foto,idx,cx){
+      doc.setDrawColor(180,180,180);doc.setLineWidth(0.2);
+      doc.rect(cx,y,COL_W,CELL_H);
+      doc.line(cx,y+LEG_H,cx+COL_W,y+LEG_H);
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+      const leg='Foto '+(idx+1)+' \u2013 '+(foto.legenda||'sem legenda');
+      doc.text(leg,cx+COL_W/2,y+LEG_H/2+1.2,{align:'center',maxWidth:COL_W-3});
+      // Fundo branco (sem preto)
+      doc.setFillColor(255,255,255);doc.rect(cx,y+LEG_H,COL_W,IMG_H,'F');
+      try{
+        const imgProps=doc.getImageProperties(foto.url);
+        const natW=imgProps.width, natH=imgProps.height;
+        const isRetrato=natH>natW;
+        let dw,dh;
+        if(isRetrato){
+          // Retrato: limitar altura a IMG_H, largura proporcional
+          dh=IMG_H; dw=natW*(IMG_H/natH);
+        } else {
+          // Paisagem: ocupar toda a largura COL_W, altura proporcional (pode ser < IMG_H)
+          dw=COL_W; dh=natH*(COL_W/natW);
+          // Se ainda ultrapassar a altura, recalcular
+          if(dh>IMG_H){dh=IMG_H;dw=natW*(IMG_H/natH);}
+        }
+        const dx=cx+(COL_W-dw)/2, dy=y+LEG_H+(IMG_H-dh)/2;
+        doc.addImage(foto.url,'JPEG',dx,dy,dw,dh);
+      } catch(e){
+        doc.setFontSize(7);doc.setTextColor(150,150,150);
+        doc.text('Imagem indisponível',cx+COL_W/2,y+LEG_H+IMG_H/2,{align:'center'});
+      }
+    }
+    for(let i=0;i<ft.length;i+=2){
+      if(y+CELL_H+2>280){doc.addPage();y=20;}
+      const a=ft[i],b=ft[i+1];
+      drawCell(a,i,x1);
+      if(b)drawCell(b,i+1,x2);
+      else{doc.setDrawColor(180,180,180);doc.setLineWidth(0.2);doc.rect(x2,y,COL_W,CELL_H);}
+      y+=CELL_H;
+    }
+  } // fim incAnexo1
+
+  doc.save(osAtual.codigo+'.pdf');
+}
+
+// ── CONFIGURAÇÕES ──
+const CFG_KEY = 'aap_config';
+let cfg = {fotos_obrig:{}};
+
+function loadConfig(){
+  try{ cfg = JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); cfg.fotos_obrig=cfg.fotos_obrig||{}; }
+  catch(e){ cfg={fotos_obrig:{}}; }
+}
+
+function saveConfigStorage(){
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+}
+
+// Tipos de ativo disponíveis
+const TIPOS_ATIVO = ['PCO','ETA','ETE','EEE','OUTRO'];
+
+// Categorias padrão por tipo
+const CATS_PADRAO = {
+  PCO: ['Placa de identificação','Rua de acesso','Vista frontal','Cerca/proteção','Cabeçote do poço','Quadro elétrico','Medidor elétrico','Entorno do poço','Esgoto/resíduos'],
+  ETA: ['Placa de identificação','Vista geral','Câmara de entrada','Decantador','Filtros','Cloração','Reservatório','Medidor','Entorno'],
+  ETE: ['Placa de identificação','Vista geral','Grade/peneira','Reator','Leito de lodo','Descarte final','Medidor','Entorno'],
+  EEE: ['Placa de identificação','Vista geral','Câmara úmida','Bombas','Quadro elétrico','Extravasor','Entorno'],
+  OUTRO: ['Vista geral','Detalhes','Entorno'],
+};
+
+function abrirConfig(){
+  loadConfig();
+  renderConfigTipos();
+  const mc=document.getElementById('modal-config');mc.style.display='flex';mc.style.alignItems='flex-end';
+}
+function fecharConfig(){ document.getElementById('modal-config').style.display='none'; }
+
+function renderConfigTipos(){
+  const el = document.getElementById('config-tipos');
+  el.innerHTML = TIPOS_ATIVO.map(tipo => {
+    const cats = cfg.fotos_obrig[tipo] || CATS_PADRAO[tipo] || [];
+    return `<div style="background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:.75rem;margin-bottom:.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <span style="font-size:.8rem;font-weight:700;color:var(--p)">${tipo}</span>
+        <button onclick="resetCats('${tipo}')" style="background:none;border:none;color:var(--txt3);font-size:.7rem;cursor:pointer">↺ Padrão</button>
+      </div>
+      <div id="cats-${tipo}">
+        ${cats.map((cat,i) => `<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+          <input value="${cat}" style="flex:1;font-size:.75rem;padding:5px 8px;border-radius:6px" 
+            oninput="updateCat('${tipo}',${i},this.value)">
+          <button onclick="removeCat('${tipo}',${i})" style="background:var(--red);border:none;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+        </div>`).join('')}
+      </div>
+      <button onclick="addCat('${tipo}')" style="background:none;border:1px dashed var(--bd2);color:var(--txt2);font-size:.7rem;padding:4px 10px;border-radius:6px;cursor:pointer;margin-top:.25rem">+ Categoria</button>
+    </div>`;
+  }).join('');
+}
+
+function getCatsFromDOM(tipo){
+  return Array.from(document.querySelectorAll(`#cats-${tipo} input`)).map(i=>i.value.trim()).filter(Boolean);
+}
+
+function updateCat(tipo,idx,val){
+  cfg.fotos_obrig[tipo] = getCatsFromDOM(tipo);
+}
+
+function removeCat(tipo,idx){
+  const cats = getCatsFromDOM(tipo);
+  cats.splice(idx,1);
+  cfg.fotos_obrig[tipo] = cats;
+  renderConfigTipos();
+}
+
+function addCat(tipo){
+  cfg.fotos_obrig[tipo] = getCatsFromDOM(tipo);
+  cfg.fotos_obrig[tipo].push('');
+  renderConfigTipos();
+  // Focus no último input adicionado
+  setTimeout(()=>{
+    const inputs = document.querySelectorAll(`#cats-${tipo} input`);
+    if(inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+
+function resetCats(tipo){
+  cfg.fotos_obrig[tipo] = [...(CATS_PADRAO[tipo]||[])];
+  renderConfigTipos();
+}
+
+function addTipoConfig(){ /* tipos são fixos por ora */ }
+
+function salvarConfig(){
+  TIPOS_ATIVO.forEach(tipo=>{
+    cfg.fotos_obrig[tipo] = getCatsFromDOM(tipo);
+  });
+  saveConfigStorage();
+  fecharConfig();
+  toast('Configurações salvas ✓');
+}
+
+function exportarConfig(){
+  salvarConfig();
+  const blob = new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'aap-config.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+function importarConfig(inp){
+  const file = inp.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const imported = JSON.parse(e.target.result);
+      if(imported.fotos_obrig){
+        cfg = imported;
+        saveConfigStorage();
+        renderConfigTipos();
+        toast('Configurações importadas ✓');
+      } else {
+        toast('Arquivo inválido');
+      }
+    } catch(err){ toast('Erro ao ler arquivo'); }
+    inp.value='';
+  };
+  reader.readAsText(file);
+}
+
+// Verificar fotos obrigatórias ao abrir seção de fotos
+// checarFotosObrig removida - substituída por cards obrigatórios
+
+// ── TOAST ──
+let _toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  if(!el)return;
+  el.textContent=msg;el.style.opacity='1';el.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(10px)';},2200);
+}
+
+// ══════════════════════════════════════════════════════
+// ── LICENÇA ──
+// ══════════════════════════════════════════════════════
+const LIC_KEY   = 'aap_license';
+const LIC_DEV   = 'aap_device_id';
+// Segredo compartilhado — altere aqui E na página geradora
+const HMAC_SECRET = 'AAP@Proximo$2025#Seg';
+
+function getOrCreateDeviceId(){
+  let id = localStorage.getItem(LIC_DEV);
+  if(!id){
+    const arr = new Uint8Array(12);
+    crypto.getRandomValues(arr);
+    id = Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+    localStorage.setItem(LIC_DEV, id);
+  }
+  return id;
+}
+
+async function hmacSHA256hex(secret, message){
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+
+// Formato da chave: AAAAMMDD-DEVICEID-HMAC[:8]
+// Ex validade: "20270101" = válida até 01/01/2027; "00000000" = sem validade
+async function gerarChave(deviceId, validade='00000000'){
+  const payload = validade + '-' + deviceId;
+  const h = await hmacSHA256hex(HMAC_SECRET, payload);
+  return validade + '-' + deviceId + '-' + h.substring(0,16);
+}
+
+async function validarChave(chave, deviceId){
+  const parts = chave.trim().toUpperCase().split('-');
+  // esperado: validade(8) - devId(24) - hmac(16)
+  if(parts.length < 3) return {ok:false, msg:'Formato inválido'};
+  const validade = parts[0];
+  // deviceId pode ter hífens — reconstruir: tudo entre o primeiro e o último segmento
+  const hmacPart = parts[parts.length-1];
+  const devPart  = parts.slice(1, parts.length-1).join('-');
+  if(devPart.toUpperCase() !== deviceId.toUpperCase()) return {ok:false, msg:'Chave não pertence a este dispositivo'};
+  if(validade !== '00000000'){
+    const ano=+validade.slice(0,4), mes=+validade.slice(4,6)-1, dia=+validade.slice(6,8);
+    if(new Date() > new Date(ano,mes,dia)) return {ok:false, msg:'Chave expirada'};
+  }
+  const payload = validade + '-' + devPart;
+  const h = await hmacSHA256hex(HMAC_SECRET, payload);
+  if(h.substring(0,16).toUpperCase() !== hmacPart.toUpperCase()) return {ok:false, msg:'Chave inválida'};
+  return {ok:true};
+}
+
+function isLicenciado(){
+  return localStorage.getItem(LIC_KEY) === 'OK';
+}
+
+async function ativarLicenca(){
+  const chave = document.getElementById('lic-input').value;
+  const devId = getOrCreateDeviceId();
+  const result = await validarChave(chave, devId);
+  if(result.ok){
+    localStorage.setItem(LIC_KEY, 'OK');
+    localStorage.setItem(LIC_KEY+'_chave', chave);
+    document.getElementById('screen-license').style.display='none';
+    document.getElementById('screen-home').classList.add('on');
+    loadConfig(); carregarLista();
+  } else {
+    document.getElementById('lic-err').textContent = '⚠ ' + result.msg;
+  }
+}
+
+function copiarDeviceId(){
+  const id = getOrCreateDeviceId();
+  navigator.clipboard?.writeText(id).then(()=>toast('ID copiado!')).catch(()=>{});
+}
+
+function renderLicenseScreen(){
+  const devId = getOrCreateDeviceId();
+  const el = document.getElementById('screen-license');
+  el.innerHTML = `
+    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:var(--bg);">
+      <div style="width:100%;max-width:380px;">
+        <div style="text-align:center;margin-bottom:2rem;">
+          <div style="width:56px;height:56px;background:var(--p);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000;font-family:monospace;margin:0 auto .875rem;">AAP</div>
+          <div style="font-size:1.1rem;font-weight:700;">AAP · Vistoria de Campo</div>
+          <div style="font-size:.7rem;color:var(--txt2);margin-top:4px;">Ativação de licença</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:1.25rem;">
+          <div style="font-size:.65rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Seu Device ID</div>
+          <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:1.1rem;">
+            <code style="flex:1;background:var(--bg3);border:1px solid var(--bd2);padding:7px 10px;border-radius:7px;font-size:.75rem;color:var(--p);word-break:break-all;">${devId}</code>
+            <button onclick="copiarDeviceId()" style="background:var(--bg3);border:1px solid var(--bd2);color:var(--txt2);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.8rem;flex-shrink:0;">📋</button>
+          </div>
+          <div style="font-size:.65rem;color:var(--txt3);margin-bottom:.9rem;line-height:1.5;">Envie este ID via <b style="color:var(--txt2);">WhatsApp ou e-mail</b> para receber sua chave de ativação.</div>
+          <label style="font-size:.65rem;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem;">Chave de licença</label>
+          <input id="lic-input" placeholder="Cole sua chave aqui…"
+            style="width:100%;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:.82rem;font-family:monospace;margin-bottom:.5rem;">
+          <div id="lic-err" style="color:var(--red);font-size:.7rem;min-height:14px;margin-bottom:.5rem;"></div>
+          <button onclick="ativarLicenca()" style="width:100%;background:var(--p);color:#000;border:none;font-weight:700;font-size:.9rem;padding:12px;border-radius:9px;cursor:pointer;">
+            ✓ Ativar
+          </button>
+        </div>
+        <div style="text-align:center;margin-top:1.25rem;font-size:.65rem;color:var(--txt3);">
+          Próximus Ambiental · ABNT NBR 15515-1:2024
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── INIT ──
+loadConfig();
+(async()=>{
+  if(isLicenciado()){
+    carregarLista();
+  } else {
+    document.getElementById('screen-home').classList.remove('on');
+    renderLicenseScreen();
+    document.getElementById('screen-license').style.display='block';
+  }
+})();
+</script>
+</body>
+</html>
+
+
+
+
