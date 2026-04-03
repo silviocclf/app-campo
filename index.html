@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<link rel="manifest" href="/manifest.json">  
 <title>AAP · Vistoria</title>
 <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
@@ -191,8 +190,8 @@ textarea{resize:vertical;min-height:60px;}
 </div>
 
   <!-- PAINEL NOVA OS -->
-  <div id="modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;">
-    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:92vh;overflow-y:auto;">
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;flex-direction:column;justify-content:flex-end;">
+    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:92vh;overflow-y:auto;box-sizing:border-box;margin:0;">
       <div class="modal-title">Nova Ordem de Serviço</div>
       <div class="fg">
         <div>
@@ -822,7 +821,7 @@ function abrirModal(){
   // Reset rotina para completa
   document.querySelectorAll('#rotina-grid .rotina-opt').forEach(el=>el.classList.remove('sel'));
   document.querySelector('#rotina-grid [data-rotina="completa"]').classList.add('sel');
-  const m=document.getElementById('modal');m.style.display='flex';m.style.alignItems='flex-end';
+  const m=document.getElementById('modal');m.style.display='flex';
 }
 function selecionarRotina(el){
   document.querySelectorAll('#rotina-grid .rotina-opt').forEach(e=>e.classList.remove('sel'));
@@ -1918,7 +1917,3 @@ loadConfig();
 </script>
 </body>
 </html>
-
-
-
-
