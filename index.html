@@ -4,6 +4,39 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <title>AAP · Vistoria</title>
+
+<!-- PWA Meta Tags -->
+<meta name="application-name" content="AAP Vistoria"/>
+<meta name="description" content="Vistoria de campo ABNT NBR 15515-1:2024 – offline"/>
+<meta name="theme-color" content="#00c896"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="AAP"/>
+<meta name="msapplication-TileColor" content="#00c896"/>
+<meta name="msapplication-tap-highlight" content="no"/>
+
+<!-- Manifest inline via blob (single-file PWA) -->
+<script>
+const _manifest={
+  name:"AAP Vistoria de Campo",
+  short_name:"AAP",
+  description:"Vistoria de campo ABNT NBR 15515-1:2024",
+  start_url:"./",
+  display:"standalone",
+  orientation:"portrait",
+  background_color:"#0d0f10",
+  theme_color:"#00c896",
+  icons:[
+    {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%2300c896'/%3E%3Ctext x='96' y='130' font-size='100' font-family='monospace' font-weight='bold' fill='%23000' text-anchor='middle'%3EAAP%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml"},
+    {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%2300c896'/%3E%3Ctext x='256' y='340' font-size='260' font-family='monospace' font-weight='bold' fill='%23000' text-anchor='middle'%3EAAP%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}
+  ]
+};
+const _mblob=new Blob([JSON.stringify(_manifest)],{type:'application/manifest+json'});
+const _mlink=document.createElement('link');
+_mlink.rel='manifest';_mlink.href=URL.createObjectURL(_mblob);
+document.head.appendChild(_mlink);
+</script>
 <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -130,6 +163,20 @@ textarea{resize:vertical;min-height:60px;}
 .gps-off{background:rgba(255,77,77,.12);color:var(--red);}
 .gps-wait{background:rgba(245,166,35,.12);color:var(--amber);}
 
+/* LICENÇA */
+.lic-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.lic-logo{width:64px;height:64px;background:var(--p);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#000;font-family:monospace;margin-bottom:1.5rem;}
+.lic-titulo{font-size:1.1rem;font-weight:700;margin-bottom:.4rem;}
+.lic-sub{font-size:.75rem;color:var(--txt2);margin-bottom:2rem;text-align:center;}
+.lic-box{width:100%;max-width:340px;}
+.lic-did{background:var(--bg3);border:1px solid var(--bd2);border-radius:8px;padding:.6rem .9rem;font-family:monospace;font-size:.72rem;color:var(--p);word-break:break-all;margin-bottom:.5rem;user-select:all;}
+.lic-did-lbl{font-size:.6rem;color:var(--txt3);margin-bottom:.25rem;}
+.lic-inp{width:100%;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:monospace;margin-bottom:.5rem;letter-spacing:.05em;}
+.lic-inp:focus{outline:none;border-color:var(--p);}
+.lic-btn{width:100%;background:var(--p);color:#000;border:none;font-weight:700;font-size:.9rem;padding:13px;border-radius:10px;cursor:pointer;margin-bottom:.75rem;}
+.lic-err{color:var(--red);font-size:.75rem;text-align:center;min-height:18px;}
+.lic-info{font-size:.62rem;color:var(--txt3);text-align:center;line-height:1.5;margin-top:.75rem;}
+
 /* ROTINA PILLS */
 .rotina-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.75rem;}
 .rotina-opt{border:1px solid var(--bd2);border-radius:9px;padding:.6rem .7rem;cursor:pointer;transition:.15s;user-select:none;}
@@ -140,9 +187,23 @@ textarea{resize:vertical;min-height:60px;}
 </head>
 <body>
 
+<!-- LICENÇA -->
+<div id="screen-lic" class="lic-screen">
+  <div class="lic-logo">AAP</div>
+  <div class="lic-titulo">Vistoria de Campo</div>
+  <div class="lic-sub">Insira sua chave de acesso para continuar</div>
+  <div class="lic-box">
+    <div class="lic-did-lbl">ID do dispositivo (envie ao administrador)</div>
+    <div class="lic-did" id="lic-did" onclick="copiarDID()">—</div>
+    <input class="lic-inp" id="lic-key" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/(.{4})(?=.)/g,'$1-').substring(0,19)">
+    <button class="lic-btn" onclick="validarLicenca()">Ativar</button>
+    <div class="lic-err" id="lic-err"></div>
+    <div class="lic-info">A chave é vinculada a este dispositivo.<br>Chaves de sessão expiram ao fechar o app.</div>
+  </div>
+</div>
+
 <!-- HOME -->
 <div id="toast" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);padding:8px 18px;border-radius:20px;font-size:.8rem;opacity:0;transition:.2s;pointer-events:none;z-index:300;white-space:nowrap;"></div>
-<div id="screen-license" style="display:none;"></div>
 
 <!-- HOME -->
 <div class="screen on" id="screen-home" style="position:relative;">
@@ -190,8 +251,8 @@ textarea{resize:vertical;min-height:60px;}
 </div>
 
   <!-- PAINEL NOVA OS -->
-  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;flex-direction:column;justify-content:flex-end;">
-    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:92vh;overflow-y:auto;box-sizing:border-box;margin:0;">
+  <div id="modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;">
+    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:92vh;overflow-y:auto;">
       <div class="modal-title">Nova Ordem de Serviço</div>
       <div class="fg">
         <div>
@@ -733,6 +794,82 @@ textarea{resize:vertical;min-height:60px;}
 </div>
 
 <script>
+// ── LICENÇA ──
+const LIC_SECRET = 'AAP#2026$V3@xK9mQ'; // segredo interno — mude para invalidar todas as chaves
+const LIC_SESSION_KEY = 'aap_lic_session';
+
+// Gera Device ID baseado em fingerprint do dispositivo
+async function getDeviceID(){
+  const raw = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width+'x'+screen.height,
+    screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  ].join('|');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  return hex.substring(0,16).toUpperCase();
+}
+
+// Gera chave esperada para um deviceID e tipo
+async function gerarChave(deviceID, tipo){
+  // tipo: 'P' = permanente, 'S' = sessão
+  const data = deviceID + '|' + tipo + '|' + LIC_SECRET;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+  const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  // Formato XXXX-XXXX-XXXX-XXXX (16 chars hex → 4 grupos de 4)
+  const raw = hex.substring(0,16).toUpperCase();
+  return raw.match(/.{4}/g).join('-');
+}
+
+async function iniciarLicenca(){
+  const did = await getDeviceID();
+  document.getElementById('lic-did').textContent = did;
+
+  // Verificar se já tem licença permanente salva
+  const salva = localStorage.getItem('aap_lic_perm');
+  if(salva){
+    const esperada = await gerarChave(did,'P');
+    if(salva === esperada){ liberarApp(); return; }
+    else localStorage.removeItem('aap_lic_perm'); // inválida, limpar
+  }
+  // Verificar se tem licença de sessão (só memória — não persiste)
+  if(sessionStorage.getItem(LIC_SESSION_KEY)==='ok'){ liberarApp(); return; }
+
+  // Mostrar tela de licença
+  document.getElementById('screen-lic').style.display='flex';
+}
+
+async function validarLicenca(){
+  const did = document.getElementById('lic-did').textContent;
+  const key = document.getElementById('lic-key').value.replace(/-/g,'');
+  const err = document.getElementById('lic-err');
+  if(key.length!==16){ err.textContent='Chave inválida'; return; }
+
+  const chavePerm = (await gerarChave(did,'P')).replace(/-/g,'');
+  const chaveSess = (await gerarChave(did,'S')).replace(/-/g,'');
+
+  if(key===chavePerm){
+    localStorage.setItem('aap_lic_perm', await gerarChave(did,'P'));
+    liberarApp();
+  } else if(key===chaveSess){
+    sessionStorage.setItem(LIC_SESSION_KEY,'ok');
+    liberarApp();
+  } else {
+    err.textContent='Chave incorreta. Verifique e tente novamente.';
+  }
+}
+
+function liberarApp(){
+  document.getElementById('screen-lic').style.display='none';
+}
+
+function copiarDID(){
+  const did=document.getElementById('lic-did').textContent;
+  navigator.clipboard?.writeText(did).then(()=>toast('ID copiado ✓')).catch(()=>{});
+}
+
 // ── DB ──
 const db = new Dexie('AAPv2');
 db.version(1).stores({ os:'++id,codigo,updatedAt' });
@@ -771,16 +908,7 @@ function iniciarGPS(){
     e=>{
       gpsAtivo=false;atualizarBadges();
       if(e.code===1){
-        const ua=navigator.userAgent;
-        const isFirefox=/Firefox/.test(ua);
-        let instrucao;
-        if(isFirefox){
-          instrucao='No Firefox: toque no ícone 🔒 na barra de endereço → Permissões → Localização → Permitir.\n\nApós liberar, recarregue a página.';
-        } else {
-          // Chrome Android (padrão)
-          instrucao='No Chrome:\n1. Toque no ícone 🔒 (cadeado) na barra de endereço\n2. Toque em "Permissões"\n3. Toque em "Localização"\n4. Selecione "Permitir"\n5. Recarregue a página\n\nOu: Chrome → ⋮ Menu → Configurações → Configurações do site → Local → "Não permitidos" → selecione este site → Permitir.';
-        }
-        alert('⚠️ GPS bloqueado\n\nAs coordenadas não serão registradas nas fotos.\n\n' + instrucao);
+        alert('⚠️ GPS bloqueado\n\nAs coordenadas não serão registradas nas fotos.\n\nPara ativar:\n1. Abra Configurações do Android\n2. Aplicativos → AAP\n3. Permissões do app\n4. Localização → Permitir\n5. Volte ao app e reabra\n\nOu mantenha pressionado o ícone do app → Informações → Permissões → Localização → Permitir.');
       }
     },{timeout:8000}
   );
@@ -821,7 +949,7 @@ function abrirModal(){
   // Reset rotina para completa
   document.querySelectorAll('#rotina-grid .rotina-opt').forEach(el=>el.classList.remove('sel'));
   document.querySelector('#rotina-grid [data-rotina="completa"]').classList.add('sel');
-  const m=document.getElementById('modal');m.style.display='flex';
+  const m=document.getElementById('modal');m.style.display='flex';m.style.alignItems='flex-end';
 }
 function selecionarRotina(el){
   document.querySelectorAll('#rotina-grid .rotina-opt').forEach(e=>e.classList.remove('sel'));
@@ -1229,7 +1357,7 @@ async function exportWord(rotina){
   // Dados da Visita
   B+=tbl(9026,[2400,3613,1200,1813],
     `<w:tr>${tcC('DADOS DA VISITA TÉCNICA:',9026,4,true,'BFBFBF')}</w:tr>`+
-    `<w:tr>${tc('Colaborador:',2400,true,'D9D9D9')}${tcSpan(osAtual.tecnico||'',6626,3)}</w:tr>`+
+    `<w:tr>${tc('Colaborador Próximus:',2400,true,'D9D9D9')}${tcSpan(osAtual.tecnico||'',6626,3)}</w:tr>`+
     `<w:tr>${tc('Horário de início:',2400,true,'D9D9D9')}${tcSpan(osAtual.horario||'',6626,3)}</w:tr>`+
     `<w:tr>${tc('Entrevistado:',2400,true,'D9D9D9')}${tc(osAtual.entrevistado||'',3613)}${tc('Matrícula:',1200,true,'D9D9D9')}${tc(osAtual.matricula||'',1813)}</w:tr>`+
     `<w:tr>${tc('Função:',2400,true,'D9D9D9')}${tc(osAtual.funcao||'',3613)}${tc('Tempo na função:',1200,true,'D9D9D9')}${tc(osAtual.tempo||'',1813)}</w:tr>`+
@@ -1528,7 +1656,7 @@ async function exportPDF(rotina){
   // Dados da Visita
   pdfTbl([
     {cells:[{text:'DADOS DA VISITA TÉCNICA:',w:PW,bold:true,bg:'BFBFBF',center:true}]},
-    {cells:[{text:'Colaborador:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.tecnico||'',w:135}]},
+    {cells:[{text:'Colaborador Próximus:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.tecnico||'',w:135}]},
     {cells:[{text:'Horário de início:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.horario||'',w:135}]},
     {cells:[{text:'Entrevistado:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.entrevistado||'',w:70},{text:'Matrícula:',w:25,bold:true,bg:'D9D9D9'},{text:osAtual.matricula||'',w:40}]},
     {cells:[{text:'Função:',w:45,bold:true,bg:'D9D9D9'},{text:osAtual.funcao||'',w:70},{text:'Tempo na função:',w:25,bold:true,bg:'D9D9D9',size:7},{text:osAtual.tempo||'',w:40}]},
@@ -1791,129 +1919,39 @@ function toast(msg){
   _toastTimer=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(10px)';},2200);
 }
 
-// ══════════════════════════════════════════════════════
-// ── LICENÇA ──
-// ══════════════════════════════════════════════════════
-const LIC_KEY   = 'aap_license';
-const LIC_DEV   = 'aap_device_id';
-// Segredo compartilhado — altere aqui E na página geradora
-const HMAC_SECRET = 'AAP@Proximo$2025#Seg';
-
-function getOrCreateDeviceId(){
-  let id = localStorage.getItem(LIC_DEV);
-  if(!id){
-    const arr = new Uint8Array(12);
-    crypto.getRandomValues(arr);
-    id = Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
-    localStorage.setItem(LIC_DEV, id);
-  }
-  return id;
-}
-
-async function hmacSHA256hex(secret, message){
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
-}
-
-// Formato da chave: AAAAMMDD-DEVICEID-HMAC[:8]
-// Ex validade: "20270101" = válida até 01/01/2027; "00000000" = sem validade
-async function gerarChave(deviceId, validade='00000000'){
-  const payload = validade + '-' + deviceId;
-  const h = await hmacSHA256hex(HMAC_SECRET, payload);
-  return validade + '-' + deviceId + '-' + h.substring(0,16);
-}
-
-async function validarChave(chave, deviceId){
-  const parts = chave.trim().toUpperCase().split('-');
-  // esperado: validade(8) - devId(24) - hmac(16)
-  if(parts.length < 3) return {ok:false, msg:'Formato inválido'};
-  const validade = parts[0];
-  // deviceId pode ter hífens — reconstruir: tudo entre o primeiro e o último segmento
-  const hmacPart = parts[parts.length-1];
-  const devPart  = parts.slice(1, parts.length-1).join('-');
-  if(devPart.toUpperCase() !== deviceId.toUpperCase()) return {ok:false, msg:'Chave não pertence a este dispositivo'};
-  if(validade !== '00000000'){
-    const ano=+validade.slice(0,4), mes=+validade.slice(4,6)-1, dia=+validade.slice(6,8);
-    if(new Date() > new Date(ano,mes,dia)) return {ok:false, msg:'Chave expirada'};
-  }
-  const payload = validade + '-' + devPart;
-  const h = await hmacSHA256hex(HMAC_SECRET, payload);
-  if(h.substring(0,16).toUpperCase() !== hmacPart.toUpperCase()) return {ok:false, msg:'Chave inválida'};
-  return {ok:true};
-}
-
-function isLicenciado(){
-  return localStorage.getItem(LIC_KEY) === 'OK';
-}
-
-async function ativarLicenca(){
-  const chave = document.getElementById('lic-input').value;
-  const devId = getOrCreateDeviceId();
-  const result = await validarChave(chave, devId);
-  if(result.ok){
-    localStorage.setItem(LIC_KEY, 'OK');
-    localStorage.setItem(LIC_KEY+'_chave', chave);
-    document.getElementById('screen-license').style.display='none';
-    document.getElementById('screen-home').classList.add('on');
-    loadConfig(); carregarLista();
-  } else {
-    document.getElementById('lic-err').textContent = '⚠ ' + result.msg;
-  }
-}
-
-function copiarDeviceId(){
-  const id = getOrCreateDeviceId();
-  navigator.clipboard?.writeText(id).then(()=>toast('ID copiado!')).catch(()=>{});
-}
-
-function renderLicenseScreen(){
-  const devId = getOrCreateDeviceId();
-  const el = document.getElementById('screen-license');
-  el.innerHTML = `
-    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:var(--bg);">
-      <div style="width:100%;max-width:380px;">
-        <div style="text-align:center;margin-bottom:2rem;">
-          <div style="width:56px;height:56px;background:var(--p);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000;font-family:monospace;margin:0 auto .875rem;">AAP</div>
-          <div style="font-size:1.1rem;font-weight:700;">AAP · Vistoria de Campo</div>
-          <div style="font-size:.7rem;color:var(--txt2);margin-top:4px;">Ativação de licença</div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:1.25rem;">
-          <div style="font-size:.65rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;">Seu Device ID</div>
-          <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:1.1rem;">
-            <code style="flex:1;background:var(--bg3);border:1px solid var(--bd2);padding:7px 10px;border-radius:7px;font-size:.75rem;color:var(--p);word-break:break-all;">${devId}</code>
-            <button onclick="copiarDeviceId()" style="background:var(--bg3);border:1px solid var(--bd2);color:var(--txt2);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.8rem;flex-shrink:0;">📋</button>
-          </div>
-          <div style="font-size:.65rem;color:var(--txt3);margin-bottom:.9rem;line-height:1.5;">Envie este ID via <b style="color:var(--txt2);">WhatsApp ou e-mail</b> para receber sua chave de ativação.</div>
-          <label style="font-size:.65rem;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.3rem;">Chave de licença</label>
-          <input id="lic-input" placeholder="Cole sua chave aqui…"
-            style="width:100%;background:var(--bg3);border:1px solid var(--bd2);color:var(--txt);border-radius:8px;padding:10px 12px;font-size:.82rem;font-family:monospace;margin-bottom:.5rem;">
-          <div id="lic-err" style="color:var(--red);font-size:.7rem;min-height:14px;margin-bottom:.5rem;"></div>
-          <button onclick="ativarLicenca()" style="width:100%;background:var(--p);color:#000;border:none;font-weight:700;font-size:.9rem;padding:12px;border-radius:9px;cursor:pointer;">
-            ✓ Ativar
-          </button>
-        </div>
-        <div style="text-align:center;margin-top:1.25rem;font-size:.65rem;color:var(--txt3);">
-          ABNT NBR 15515-1:2024
-        </div>
-      </div>
-    </div>`;
-}
-
 // ── INIT ──
 loadConfig();
-(async()=>{
-  if(isLicenciado()){
-    carregarLista();
-  } else {
-    document.getElementById('screen-home').classList.remove('on');
-    renderLicenseScreen();
-    document.getElementById('screen-license').style.display='block';
-  }
-})();
+carregarLista();
+iniciarLicenca();
+
+// ── SERVICE WORKER (PWA offline) ──
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='aap-v1';
+const ASSETS=[
+  'https://unpkg.com/dexie@3.2.4/dist/dexie.js',
+  'https://unpkg.com/pizzip@3.1.4/dist/pizzip.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+];
+self.addEventListener('install',e=>e.waitUntil(
+  caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})).then(()=>self.skipWaiting())
+));
+self.addEventListener('activate',e=>e.waitUntil(
+  caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+));
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+    if(res.ok&&e.request.url.startsWith('https://')){
+      const clone=res.clone();
+      caches.open(CACHE).then(c=>c.put(e.request,clone));
+    }
+    return res;
+  }).catch(()=>caches.match(e.request))));
+});`;
+  const swBlob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'./'}).catch(()=>{});
+}
 </script>
 </body>
 </html>
