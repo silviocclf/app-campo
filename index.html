@@ -5465,8 +5465,8 @@ textarea{resize:vertical;min-height:60px;}
 </div>
 
   <!-- PAINEL NOVA OS -->
-  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;">
-    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-height:95vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:1rem 1rem 1.5rem;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
       <div class="modal-title">Nova Ordem de Serviço</div>
       <div class="fg">
         <div>
@@ -5490,22 +5490,21 @@ textarea{resize:vertical;min-height:60px;}
             </div>
           </div>
         </div>
+        <div>
           <label class="fl">Código OS *</label>
           <input id="m-cod" placeholder="Ex: PL-APA-PCO1368" oninput="prevNome()">
           <div id="m-prev" style="font-size:.65rem;color:var(--p);font-family:monospace;margin-top:3px;min-height:14px;"></div>
         </div>
+        <div><label class="fl">Nome do Ativo</label><input id="m-ativo" placeholder="Ex: Amazonas 01"></div>
         <div class="row2">
-          <div><label class="fl">Nome do Ativo</label><input id="m-ativo" placeholder="Ex: Amazonas 01"></div>
           <div><label class="fl">Tipo</label>
             <select id="m-tipo"><option value="PCO">PCO – Poço</option><option value="ETA">ETA</option><option value="ETE">ETE</option><option value="EEE">EEE</option><option value="OUTRO">Outro</option></select>
           </div>
-        </div>
-        <div class="row2">
-          <div><label class="fl">Município</label><input id="m-mun" placeholder="Parauapebas"></div>
           <div><label class="fl">UF</label>
             <select id="m-uf"><option>PA</option><option>AM</option><option>AC</option><option>AP</option><option>RO</option><option>RR</option><option>TO</option><option>MA</option><option>PI</option><option>CE</option><option>RN</option><option>PB</option><option>PE</option><option>AL</option><option>SE</option><option>BA</option><option>MG</option><option>ES</option><option>RJ</option><option>SP</option><option>PR</option><option>SC</option><option>RS</option><option>MS</option><option>MT</option><option>GO</option><option>DF</option></select>
           </div>
         </div>
+        <div><label class="fl">Município</label><input id="m-mun" placeholder="Ex: Parauapebas"></div>
         <div class="row2">
           <div><label class="fl">Data</label><input type="date" id="m-data"></div>
           <div><label class="fl">Técnico</label><input id="m-tec" placeholder="Nome(s)"></div>
@@ -5518,9 +5517,9 @@ textarea{resize:vertical;min-height:60px;}
         <div>
           <label class="fl">Urgência</label>
           <div style="display:flex;gap:.4rem">
-            <button type="button" onclick="selUrgencia(this,'normal')" data-urg="normal" class="urg-btn sel" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--p);background:rgba(0,200,150,.08);color:var(--txt);font-size:.75rem;cursor:pointer">⬜ Normal</button>
-            <button type="button" onclick="selUrgencia(this,'media')" data-urg="media" class="urg-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg3);color:var(--txt);font-size:.75rem;cursor:pointer">⚠️ Média</button>
-            <button type="button" onclick="selUrgencia(this,'alta')" data-urg="alta" class="urg-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg3);color:var(--txt);font-size:.75rem;cursor:pointer">🔴 Alta</button>
+            <button type="button" onclick="selUrgencia(this,'normal')" data-urg="normal" class="urg-btn sel" style="flex:1;padding:10px 4px;border-radius:8px;border:1px solid var(--p);background:rgba(0,200,150,.08);color:var(--txt);font-size:.8rem;cursor:pointer;font-weight:600">Normal</button>
+            <button type="button" onclick="selUrgencia(this,'media')" data-urg="media" class="urg-btn" style="flex:1;padding:10px 4px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg3);color:var(--txt);font-size:.8rem;cursor:pointer;font-weight:600">⚠️ Média</button>
+            <button type="button" onclick="selUrgencia(this,'alta')" data-urg="alta" class="urg-btn" style="flex:1;padding:10px 4px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg3);color:var(--txt);font-size:.8rem;cursor:pointer;font-weight:600">🔴 Alta</button>
           </div>
         </div>
       </div>
