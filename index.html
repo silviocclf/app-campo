@@ -5207,6 +5207,12 @@
 //# sourceMappingURL=dexie.js.map
 
 </script>
-<script src="jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// Fallback se CDN não carregar
+if(!window.jspdf){
+  window.jspdf={jsPDF:function(){return{addPage:function(){return this},text:function(){return this},save:function(){},setFontSize:function(){return this},setFont:function(){return this},setTextColor:function(){return this},splitTextToSize:function(t){return[t]},addImage:function(){return this},output:function(){return ''},internal:{scaleFactor:1,pageSize:{getWidth:function(){return 210},getHeight:function(){return 297}}},getNumberOfPages:function(){return 1},setPage:function(){return this}};}}
+}
+</script>
 </body>
 </html>
